@@ -131,6 +131,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\Bullet.cpp" />
+    <ClCompile Include="src\Enemy.cpp" />
     <ClCompile Include="src\game.cpp" />
     <ClCompile Include="src\GameObject.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -138,6 +139,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Bullet.h" />
+    <ClInclude Include="include\Enemy.h" />
     <ClInclude Include="include\game.h" />
     <ClInclude Include="include\GameObject.h" />
     <ClInclude Include="include\globals.h" />

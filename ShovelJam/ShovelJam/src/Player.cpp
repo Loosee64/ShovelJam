@@ -48,3 +48,8 @@ void Player::shoot()
 	Vector2 mousePos = GetMousePosition();
 	bullet.fire(m_position, mousePos);
 }
+
+void Player::resetBullet()
+{
+	bullet.reset();
+}

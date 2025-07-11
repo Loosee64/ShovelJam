@@ -12,6 +12,9 @@ public:
 	virtual void draw();
 	virtual void movement();
 
+	Vector2 getPosition() { return m_position; }
+	float getRadius() { return m_radius; }
+
 protected:
 	Vector2 m_position;
 	Vector2 m_velocity;

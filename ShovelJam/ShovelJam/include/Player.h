@@ -15,6 +15,10 @@ public:
     void input();
     void shoot();
 
+    Vector2 getBulletPos() { return bullet.getPosition(); }
+    float getBulletRadius() { return bullet.getRadius(); }
+    void resetBullet();
+
 private:
     Bullet bullet;
 };

@@ -34,3 +34,9 @@ void Bullet::fire(Vector2 t_start, Vector2 t_target)
 
 	m_velocity = heading;
 }
+
+void Bullet::reset()
+{
+	m_position.x = -10000;
+	m_velocity = { 0.0f, 0.0f };
+}
