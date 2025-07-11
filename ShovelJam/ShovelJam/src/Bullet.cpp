@@ -1,6 +1,6 @@
 #include "Bullet.h"
 
-Bullet::Bullet()
+Bullet::Bullet() : m_active(false)
 {
 	init();
 }
@@ -21,7 +21,18 @@ void Bullet::update()
 
 void Bullet::movement()
 {
-	m_position += m_velocity;
+	if (m_active)
+	{
+		m_position += m_velocity;
+	}
+}
+
+void Bullet::draw()
+{
+	if (m_active)
+	{
+		GameObject::draw();
+	}
 }
 
 void Bullet::fire(Vector2 t_start, Vector2 t_target)
@@ -33,10 +44,13 @@ void Bullet::fire(Vector2 t_start, Vector2 t_target)
 	heading = Vector2Scale(heading, m_speed);
 
 	m_velocity = heading;
+
+	m_active = true;
 }
 
 void Bullet::reset()
 {
 	m_position.x = -10000;
 	m_velocity = { 0.0f, 0.0f };
+	m_active = false;
 }

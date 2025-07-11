@@ -9,8 +9,9 @@ class GameObject
 public:
 	virtual void init() = 0;
 	virtual void update() = 0;
-	virtual void draw();
 	virtual void movement();
+
+	void draw();
 
 	Vector2 getPosition() { return m_position; }
 	float getRadius() { return m_radius; }

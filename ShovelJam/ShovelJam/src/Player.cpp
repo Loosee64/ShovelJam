@@ -1,6 +1,6 @@
 #include "Player.h"
 
-Player::Player()
+Player::Player() : activeBullet(-1)
 {
 	init();
 }
@@ -18,19 +18,27 @@ void Player::update()
 {
 	input();
 	movement();
-	bullet.update();
+
+	for (Bullet& bullet : bullets)
+	{
+		bullet.update();
+	}
 }
 
-void Player::draw()
-{
-	DrawCircleV(m_position, m_radius, m_colour);
-	bullet.draw();
-}
 
 void Player::movement()
 {
 	m_position += m_velocity;
 	m_velocity = { 0.0f, 0.0f };
+}
+
+void Player::draw()
+{
+	GameObject::draw();
+	for (Bullet& bullet : bullets)
+	{
+		bullet.draw();
+	}
 }
 
 void Player::input()
@@ -46,10 +54,19 @@ void Player::input()
 void Player::shoot()
 {
 	Vector2 mousePos = GetMousePosition();
-	bullet.fire(m_position, mousePos);
+
+	if (activeBullet < MAX_BULLETS - 1)
+	{
+		activeBullet++;
+	}
+	else
+	{
+		activeBullet = 0;
+	}
+	bullets[activeBullet].fire(m_position, mousePos);
 }
 
 void Player::resetBullet()
 {
-	bullet.reset();
+	bullets[activeBullet].reset();
 }
