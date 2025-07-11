@@ -1,5 +1,6 @@
 #include "raylib.h"
 #include "stdio.h"
+#include "globals.h"
 
 #include "../include/game.h"
 
@@ -8,8 +9,6 @@
 #include <emscripten/emscripten.h>
 #endif
 
-const int screenWidth = 1920;
-const int screenHeight = 1080;
 
 void GameLoop(void);
 
@@ -18,7 +17,7 @@ Game game;
 int main(void)
 {
 
-    InitWindow(screenWidth, screenHeight, "Shovel Jam 2025");
+    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Shovel Jam 2025");
 
     game.init();
 

@@ -1,21 +1,16 @@
 #pragma once
 #include "GameObject.h"
-#include "Bullet.h"
 
-class Player :
+class Bullet :
     public GameObject
 {
 public:
-    Player();
+    Bullet();
     virtual void init();
     virtual void update();
-    virtual void draw();
     virtual void movement();
 
-    void input();
-    void shoot();
+    void fire(Vector2 t_start, Vector2 t_target);
 
-private:
-    Bullet bullet;
 };
 

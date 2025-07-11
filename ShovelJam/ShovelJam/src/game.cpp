@@ -4,7 +4,6 @@
 
 void Game::init()
 {
-    player.init();
 }
 
 void Game::draw()
@@ -16,4 +15,5 @@ void Game::draw()
 void Game::update()
 {
     player.update();
+    
 }
