@@ -10,21 +10,33 @@ void Game::draw()
 {
     DrawFPS(0, 0);
     player.draw();
-    enemy.draw();
+    for (Enemy& enemy : enemy)
+    {
+        enemy.draw();
+    }
 }
 
 void Game::update()
 {
     player.update();
-    enemy.update();
+    for (Enemy& enemy : enemy)
+    {
+        enemy.update();
+    }
     collisionCheck();
 }
 
 void Game::collisionCheck()
 {
-    if (CheckCollisionCircles(player.getBulletPos(), player.getRadius(), enemy.getPosition(), enemy.getRadius()))
+    for (Enemy& enemy : enemy)
     {
-        enemy.kill();
-        player.resetBullet();
+        if (enemy.isActive())
+        {
+            if (CheckCollisionCircles(player.getBulletPos(), player.getRadius(), enemy.getPosition(), enemy.getRadius()))
+            {
+                enemy.kill();
+                player.resetBullet();
+            }
+        }
     }
 }

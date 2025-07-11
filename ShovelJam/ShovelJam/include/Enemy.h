@@ -9,9 +9,14 @@ public:
     virtual void update();
     virtual void movement();
 
+    void draw();
+
     void kill();
+
+    bool isActive() { return m_active; }
 
 private:
     Direction m_direction;
+    bool m_active;
 };
 

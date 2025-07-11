@@ -1,6 +1,6 @@
 #include "Enemy.h"
 
-Enemy::Enemy()
+Enemy::Enemy() : m_active(true)
 {
 	init();
 }
@@ -16,7 +16,10 @@ void Enemy::init()
 
 void Enemy::update()
 {
-	movement();
+	if (m_active)
+	{
+		movement();
+	}
 }
 
 
@@ -31,7 +34,15 @@ void Enemy::movement()
 	m_position += m_velocity;
 }
 
+void Enemy::draw()
+{
+	if (m_active)
+	{
+		GameObject::draw();
+	}
+}
+
 void Enemy::kill()
 {
-	m_position.x = 10000;
+	m_active = false;
 }
