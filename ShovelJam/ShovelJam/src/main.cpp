@@ -8,8 +8,8 @@
 #include <emscripten/emscripten.h>
 #endif
 
-const int screenWidth = 800;
-const int screenHeight = 600;
+const int screenWidth = 1920;
+const int screenHeight = 1080;
 
 void GameLoop(void);
 
@@ -18,7 +18,7 @@ Game game;
 int main(void)
 {
 
-    InitWindow(screenWidth, screenHeight, "Raylib StarterKit GPPI");
+    InitWindow(screenWidth, screenHeight, "Shovel Jam 2025");
 
     game.init();
 
@@ -33,29 +33,19 @@ int main(void)
     }
 #endif
 
-
     CloseWindow();
 
     return 0;
 }
 
-int counter = 0;
-char message[11];
 
 void GameLoop(void)
 {
     BeginDrawing();
-
-    // Update Game Data
-    // Should be outside BeginDrawing(); and EndDrawing();
     game.update();
 
     ClearBackground(BLACK);
-
-    // Draw the Game Objects
     game.draw();
-
-    counter++;
 
     EndDrawing();
 }
