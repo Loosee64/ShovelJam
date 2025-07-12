@@ -5,6 +5,12 @@
 void Game::init()
 {
     enemySpawning(MAX_ENEMIES);
+    npcs.reserve(MAX_NPCS);
+    npcs.push_back(std::make_shared<NPC>());
+    for (auto npc : npcs)
+    {
+        npc->init();
+    }
 }
 
 void Game::draw()
@@ -14,6 +20,10 @@ void Game::draw()
     for (Enemy& enemy : enemies)
     {
         enemy.draw();
+    }
+    for (auto &npc : npcs)
+    {
+        npc->draw();
     }
 }
 
@@ -26,7 +36,19 @@ void Game::update()
     }
     collisionCheck();
 
-    if (IsKeyReleased(KEY_R)) { enemySpawning(MAX_ENEMIES); }
+    if (IsKeyReleased(KEY_R)) { enemySpawning(MAX_ENEMIES); } // DEV KEY
+    if (IsKeyReleased(KEY_T)) // DEV KEY
+    {
+        for (auto &enemy : enemies)
+        {
+            enemy.kill();
+        }
+    }
+
+    for (auto& npc : npcs)
+    {
+        npc->update(player.getPosition());
+    }
 }
 
 void Game::collisionCheck()
@@ -48,6 +70,14 @@ void Game::collisionCheck()
                 player.damage();
                 enemy.recoil(20.0f);
             }
+        }
+    }
+
+    for (auto &npc : npcs)
+    {
+        if (CheckCollisionCircles(player.getPosition(), player.getRadius(), npc->getPosition(), npc->getRadius()))
+        {
+            npc->startFollowing();
         }
     }
 }

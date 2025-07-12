@@ -11,7 +11,7 @@ void Enemy::init()
 	m_velocity = { 0.0f, 0.0f };
 	m_colour = RED;
 	m_radius = 25.0f;
-	m_speed = 2.5f;
+	m_speed = 1.5f;
 	m_health = 2;
 }
 
@@ -24,7 +24,7 @@ void Enemy::update(Vector2 t_target)
 			kill();
 		}
 
-		track(t_target);
+		follow(t_target);
 		movement();
 	}
 }
@@ -59,17 +59,6 @@ void Enemy::spawn(Vector2 t_start)
 void Enemy::kill()
 {
 	m_active = false;
-}
-
-void Enemy::track(Vector2& t_target)
-{
-	Vector2 heading;
-
-	heading = t_target - m_position;
-	heading = Vector2Normalize(heading);
-	heading = Vector2Scale(heading, m_speed);
-
-	m_velocity = heading;
 }
 
 void Enemy::recoil(float t_scale)

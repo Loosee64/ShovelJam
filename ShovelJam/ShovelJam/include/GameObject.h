@@ -13,6 +13,7 @@ public:
 	virtual void movement();
 	virtual void damage();
 	virtual void kill();
+	virtual void follow(Vector2& t_target);
 
 	void draw();
 

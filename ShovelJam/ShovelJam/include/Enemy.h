@@ -16,7 +16,6 @@ public:
 
     void spawn(Vector2 t_start);
     void kill();
-    void track(Vector2& t_target);
     void recoil(float t_scale);
 
     bool isActive() { return m_active; }
