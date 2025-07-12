@@ -2,7 +2,7 @@
 #include "stdio.h"
 #include "../include/game.h"
 
-Game::Game() : m_numTargets(0), currentCell(CENTRE), dt(0)
+Game::Game() : m_numTargets(0), currentCell(CENTRE), dt(0), wavedt(0), enemyKill(0), waveComplete(false)
 {
 }
 
@@ -90,6 +90,7 @@ void Game::update()
     {
         enemy.update(player.getPosition());
     }
+
     collisionCheck();
 
     if (IsKeyReleased(KEY_R)) { enemySpawning(MAX_ENEMIES); } // DEV KEY
@@ -122,6 +123,10 @@ void Game::update()
         npc->update(player.getPosition());
     }
 
+    if (!waveComplete)
+    {
+        waveSpawning();
+    }
 }
 
 void Game::collisionCheck()
@@ -231,12 +236,33 @@ void Game::enemySpawning(int t_num)
             if (t_num == MAX_ENEMIES)
             {
                 enemies[i].spawn(start);
+                waveComplete = false;
             }
             else if (t_num < MAX_ENEMIES)
             {
                 enemies[t_num].spawn(start);
+                waveComplete = false;
             }
         }
+    }
+}
+
+void Game::waveSpawning()
+{
+    enemyKill = 0;
+
+    for (auto enemy : enemies)
+    {
+        if (!enemy.isActive() && currentCell != CENTRE)
+        {
+            enemyKill++;
+        }
+    }
+
+    if (enemyKill == MAX_ENEMIES)
+    {
+        supplySpawning(1);
+        waveComplete = true;
     }
 }
 
@@ -246,10 +272,13 @@ void Game::supplySpawning(int t_amount)
 
     for (int i = 0; i < t_amount; i++)
     {
-        pos.x = (rand() % SCREEN_WIDTH - 50) + 50;
-        pos.y = (rand() % SCREEN_HEIGHT - 50) + 50;
+        if (!supplies.at(i)->isActive())
+        {
+            pos.x = (rand() % SCREEN_WIDTH - 50) + 50;
+            pos.y = (rand() % SCREEN_HEIGHT - 50) + 50;
 
-        supplies.at(i)->spawn(pos);
+            supplies.at(i)->spawn(pos);
+        }
     }
 }
 
@@ -276,28 +305,24 @@ void Game::moveCell()
             currentCell = CELLWEST;
             player.setPositionX(SCREEN_WIDTH - player.getRadius());
             enemySpawning(MAX_ENEMIES);
-            supplySpawning(1);
         }
         else if (player.getPosition().x >= SCREEN_WIDTH)
         {
             currentCell = CELLEAST;
             player.setPositionX(0.0f);
             enemySpawning(MAX_ENEMIES);
-            supplySpawning(1);
         }
         else if (player.getPosition().y <= 0.0f)
         {
             currentCell = CELLNORTH;
             player.setPositionY(SCREEN_HEIGHT);
             enemySpawning(MAX_ENEMIES);
-            supplySpawning(1);
         }
         else if (player.getPosition().y >= SCREEN_HEIGHT)
         {
             currentCell = CELLSOUTH;
             player.setPositionY(0.0f);
             enemySpawning(MAX_ENEMIES);
-            supplySpawning(1);
         }
 
         return;

@@ -14,6 +14,8 @@ public:
     void update(Vector2 t_target);
     void draw();
 
+    int getHealth() { return m_health; }
+
     void spawn(Vector2 t_start);
     void recoil(float t_scale);
 

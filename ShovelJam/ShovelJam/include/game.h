@@ -20,6 +20,7 @@ public:
 
     void collisionCheck();
     void enemySpawning(int t_num);
+    void waveSpawning();
     void supplySpawning(int t_amount);
     void findNPCTarget();
     void moveCell();
@@ -31,6 +32,9 @@ private:
 
     Player player;
     Enemy enemies[MAX_ENEMIES];
+    int enemyKill;
+    float wavedt;
+    bool waveComplete;
     std::vector<std::shared_ptr<NPC>> npcs;
     std::vector<std::shared_ptr<Supply>> supplies;
 

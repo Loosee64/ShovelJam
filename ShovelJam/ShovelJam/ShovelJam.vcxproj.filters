@@ -55,7 +55,7 @@
       <Filter>Source Files\Behaviour Pattern</Filter>
     </ClCompile>
     <ClCompile Include="src\Supply.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Game Object</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -90,7 +90,7 @@
       <Filter>Header Files\Behaviour Pattern</Filter>
     </ClInclude>
     <ClInclude Include="include\Supply.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Game Object</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

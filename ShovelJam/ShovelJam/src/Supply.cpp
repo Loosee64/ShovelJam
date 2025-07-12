@@ -9,7 +9,7 @@ void Supply::init()
 	m_position = { 100.0f, 500.0f };
 	m_colour = BROWN;
 	m_radius = 25.0f;
-	m_active = true;
+	m_active = false;
 }
 
 void Supply::draw()
