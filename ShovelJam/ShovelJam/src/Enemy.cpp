@@ -1,6 +1,6 @@
 #include "Enemy.h"
 
-Enemy::Enemy() : m_active(true)
+Enemy::Enemy()
 {
 	init();
 }
@@ -53,12 +53,7 @@ void Enemy::spawn(Vector2 t_start)
 {
 	m_health = 2;
 	m_position = t_start;
-	m_active = true;
-}
-
-void Enemy::kill()
-{
-	m_active = false;
+	GameObject::spawn();
 }
 
 void Enemy::recoil(float t_scale)

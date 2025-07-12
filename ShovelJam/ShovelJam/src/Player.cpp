@@ -1,6 +1,6 @@
 #include "Player.h"
 
-Player::Player() : activeBullet(-1), iFrames(0)
+Player::Player() : activeBullet(-1), iFrames(0), dt(0), m_shootingCooldown(0.1f)
 {
 	init();
 }
@@ -17,9 +17,11 @@ void Player::init()
 
 void Player::update()
 {
+	dt += GetFrameTime();
+
 	if (iFrames > 0)
 	{
-		iFrames--;
+		iFrames += GetFrameTime();
 	}
 
 	if (m_health <= 0)
@@ -50,10 +52,10 @@ void Player::kill()
 
 void Player::damage()
 {
-	if (iFrames <= 0)
+	if (iFrames >= MAX_IFRAMES)
 	{
 		m_health--;
-		//iFrames = MAX_IFRAMES;
+		iFrames = 0;
 	}
 	std::cout << m_health << "\n";
 }
@@ -74,7 +76,7 @@ void Player::input()
 	if (IsKeyDown(KEY_A)) { m_velocity.x = -m_speed; }
 	if (IsKeyDown(KEY_D)) { m_velocity.x = m_speed; }
 	
-	if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) { shoot(); }
+	if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && dt >= m_shootingCooldown) { shoot(); dt = 0; }
 }
 
 void Player::shoot()

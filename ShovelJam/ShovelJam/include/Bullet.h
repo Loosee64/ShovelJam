@@ -15,6 +15,5 @@ public:
     void reset();
 
 private:
-    bool m_active;
 };
 

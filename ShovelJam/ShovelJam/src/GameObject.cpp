@@ -20,6 +20,12 @@ void GameObject::damage()
 
 void GameObject::kill()
 {
+	m_active = false;
+}
+
+void GameObject::spawn()
+{
+	m_active = true;
 }
 
 void GameObject::follow(Vector2& t_target)

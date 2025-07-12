@@ -15,13 +15,9 @@ public:
     void draw();
 
     void spawn(Vector2 t_start);
-    void kill();
     void recoil(float t_scale);
-
-    bool isActive() { return m_active; }
 
 private:
     Direction m_direction;
-    bool m_active;
 };
 

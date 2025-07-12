@@ -10,10 +10,10 @@ public:
     virtual void init() override;
     virtual void update() override;
     virtual void movement() override;
-    virtual void kill() override;
     virtual void damage() override;
 
     void draw();
+    void kill();
 
     void input();
     void shoot();
@@ -25,9 +25,11 @@ public:
 
 private:
     static const int MAX_BULLETS = 10;
-    const int MAX_IFRAMES = 90;
+    const int MAX_IFRAMES = 0.5f;
     Bullet bullets[MAX_BULLETS];
     int activeBullet;
     int iFrames;
+    float dt;
+    float m_shootingCooldown;
 };
 

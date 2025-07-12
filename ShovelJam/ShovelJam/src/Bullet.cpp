@@ -1,6 +1,6 @@
 #include "Bullet.h"
 
-Bullet::Bullet() : m_active(false)
+Bullet::Bullet()
 {
 	init();
 }
@@ -12,6 +12,7 @@ void Bullet::init()
 	m_colour = WHITE;
 	m_radius = 10.0f;
 	m_speed = 20.0f;
+	m_active = false;
 }
 
 void Bullet::update()

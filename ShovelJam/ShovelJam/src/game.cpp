@@ -2,6 +2,10 @@
 #include "stdio.h"
 #include "../include/game.h"
 
+Game::Game() : m_numTargets(0)
+{
+}
+
 void Game::init()
 {
     enemySpawning(MAX_ENEMIES);
@@ -45,10 +49,17 @@ void Game::update()
         }
     }
 
+    findNPCTarget();
+
     for (auto& npc : npcs)
     {
+        if (m_numTargets > 0)
+        {
+            npc->findTarget(m_targetsArray, m_numTargets);
+        }
         npc->update(player.getPosition());
     }
+
 }
 
 void Game::collisionCheck()
@@ -69,6 +80,19 @@ void Game::collisionCheck()
             {
                 player.damage();
                 enemy.recoil(20.0f);
+            }
+
+
+            for (auto npc : npcs)
+            {
+                if (npc->isActive())
+                {
+                    if (CheckCollisionCircles(npc->getBulletPos(), npc->getBulletRadius(), enemy.getPosition(), enemy.getRadius()))
+                    {
+                        enemy.damage();
+                        npc->resetBullet();
+                    }
+                }
             }
         }
     }
@@ -133,3 +157,18 @@ void Game::enemySpawning(int t_num)
         }
     }
 }
+
+void Game::findNPCTarget()
+{
+    m_numTargets = 0;
+
+    for (int i = 0; i < MAX_ENEMIES; i++)
+    {
+        if (enemies[i].isActive())
+        {
+            m_targetsArray[m_numTargets] = enemies[i].getPosition();
+            m_numTargets++;
+        }
+    }
+}
+
