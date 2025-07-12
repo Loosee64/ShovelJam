@@ -1,6 +1,7 @@
 #include "raylib.h"
 #include "stdio.h"
 #include "globals.h"
+#include "random"
 
 #include "../include/game.h"
 
@@ -16,7 +17,7 @@ Game game;
 
 int main(void)
 {
-
+    srand(time(nullptr));
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Shovel Jam 2025");
 
     game.init();

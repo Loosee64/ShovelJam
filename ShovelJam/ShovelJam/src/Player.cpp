@@ -7,7 +7,7 @@ Player::Player() : activeBullet(-1)
 
 void Player::init()
 {
-	m_position = { 100.0f, 100.0f };
+	m_position = { 50.0f, 100.0f };
 	m_velocity = { 0.0f, 0.0f };
 	m_colour = YELLOW;
 	m_radius = 25.0f;

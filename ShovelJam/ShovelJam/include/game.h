@@ -12,13 +12,13 @@ public:
     void update();
 
     void collisionCheck();
-    void enemySpawning();
+    void enemySpawning(int t_num);
 
 private:
     static const int MAX_ENEMIES = 10;
 
     Player player;
-    Enemy enemy[MAX_ENEMIES];
+    Enemy enemies[MAX_ENEMIES];
 };
 
 #endif // GAME_H

@@ -1,5 +1,7 @@
 #pragma once
 #include "GameObject.h"
+#include "random"
+
 class Enemy :
     public GameObject
 {
@@ -11,6 +13,7 @@ public:
 
     void draw();
 
+    void spawn(Vector2 t_start);
     void kill();
 
     bool isActive() { return m_active; }

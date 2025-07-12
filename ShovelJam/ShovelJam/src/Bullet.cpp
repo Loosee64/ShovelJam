@@ -7,7 +7,7 @@ Bullet::Bullet() : m_active(false)
 
 void Bullet::init()
 {
-	m_position = { 200.0f, 100.0f };
+	m_position = { 100000.0f, 100.0f };
 	m_velocity = { 0.0f, 0.0f };
 	m_colour = WHITE;
 	m_radius = 10.0f;
