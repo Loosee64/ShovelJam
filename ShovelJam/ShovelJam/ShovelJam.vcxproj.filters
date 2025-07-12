@@ -13,6 +13,18 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\Game Object">
+      <UniqueIdentifier>{b06f3a46-768f-487c-b650-6e6a00ec146c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Game Object">
+      <UniqueIdentifier>{5c7e6012-bf53-4235-a37b-44f286fea9c5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Behaviour Pattern">
+      <UniqueIdentifier>{98fb368c-90d4-4299-bd49-5ab2dfe58b45}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Behaviour Pattern">
+      <UniqueIdentifier>{2bc10e32-fd99-42e0-9d09-a85cedd256b8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -21,19 +33,25 @@
     <ClCompile Include="src\game.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\GameObject.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Player.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\Bullet.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Game Object</Filter>
     </ClCompile>
     <ClCompile Include="src\Enemy.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Game Object</Filter>
+    </ClCompile>
+    <ClCompile Include="src\GameObject.cpp">
+      <Filter>Source Files\Game Object</Filter>
     </ClCompile>
     <ClCompile Include="src\NPC.cpp">
+      <Filter>Source Files\Game Object</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Player.cpp">
+      <Filter>Source Files\Game Object</Filter>
+    </ClCompile>
+    <ClCompile Include="src\OffensiveBehaviour.cpp">
+      <Filter>Source Files\Behaviour Pattern</Filter>
+    </ClCompile>
+    <ClCompile Include="src\DefensiveBehaviour.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -41,22 +59,31 @@
     <ClInclude Include="include\game.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\GameObject.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Player.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\globals.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\Bullet.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Game Object</Filter>
     </ClInclude>
     <ClInclude Include="include\Enemy.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Game Object</Filter>
+    </ClInclude>
+    <ClInclude Include="include\GameObject.h">
+      <Filter>Header Files\Game Object</Filter>
     </ClInclude>
     <ClInclude Include="include\NPC.h">
+      <Filter>Header Files\Game Object</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Player.h">
+      <Filter>Header Files\Game Object</Filter>
+    </ClInclude>
+    <ClInclude Include="include\NPCBehaviour.h">
+      <Filter>Header Files\Behaviour Pattern</Filter>
+    </ClInclude>
+    <ClInclude Include="include\OffensiveBehaviour.h">
+      <Filter>Header Files\Behaviour Pattern</Filter>
+    </ClInclude>
+    <ClInclude Include="include\DefensiveBehaviour.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -10,8 +10,10 @@ void Game::init()
 {
     enemySpawning(MAX_ENEMIES);
     npcs.reserve(MAX_NPCS);
-    npcs.push_back(std::make_shared<NPC>());
-    for (auto npc : npcs)
+    npcs.push_back(std::make_shared<NPC>(NPC("Fred", {500.0f, 500.0f}, std::make_shared<DefensiveBehaviour>())));
+    npcs.push_back(std::make_shared<NPC>(NPC("Maddy", {700.0f, 300.0f}, std::make_shared<OffensiveBehaviour>())));
+    npcs.push_back(std::make_shared<NPC>(NPC("Ferdia", {400.0f, 600.0f}, std::make_shared<OffensiveBehaviour>())));
+    for (auto& npc : npcs)
     {
         npc->init();
     }
@@ -53,10 +55,7 @@ void Game::update()
 
     for (auto& npc : npcs)
     {
-        if (m_numTargets > 0)
-        {
-            npc->findTarget(m_targetsArray, m_numTargets);
-        }
+        npc->findTarget(m_targetsArray, m_numTargets);
         npc->update(player.getPosition());
     }
 
@@ -83,7 +82,7 @@ void Game::collisionCheck()
             }
 
 
-            for (auto npc : npcs)
+            for (auto& npc : npcs)
             {
                 if (npc->isActive())
                 {
