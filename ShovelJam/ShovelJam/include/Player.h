@@ -18,6 +18,9 @@ public:
     void input();
     void shoot();
 
+    void setPositionX(float t_x) { m_position.x = t_x; }
+    void setPositionY(float t_y) { m_position.y = t_y; }
+
     int getActiveBullet() { return activeBullet; }
     Vector2 getBulletPos() { return bullets[activeBullet].getPosition(); }
     float getBulletRadius() { return bullets[activeBullet].getRadius(); }

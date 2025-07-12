@@ -2,7 +2,7 @@
 #include "stdio.h"
 #include "../include/game.h"
 
-Game::Game() : m_numTargets(0)
+Game::Game() : m_numTargets(0), currentCell(CELLWEST), dt(0)
 {
 }
 
@@ -31,11 +31,43 @@ void Game::draw()
     {
         npc->draw();
     }
+    std::string cellText;
+    switch (currentCell)
+    {
+    case CELLNORTH:
+        cellText = "NORTH";
+        break;
+    case CELLSOUTH:
+        cellText = "SOUTH";
+        break;
+    case CELLEAST:
+        cellText = "EAST";
+        break;
+    case CELLWEST:
+        cellText = "WEST";
+        break;
+    case CENTRE:
+        cellText = "CENTRE";
+        break;
+    default:
+        break;
+    }
+
+    DrawText(cellText.c_str(), 500, 10, 30, WHITE);
 }
 
 void Game::update()
 {
+    dt += GetFrameTime();
+
     player.update();
+
+    if (dt > 0.5f)
+    {
+        moveCell();
+        dt = 0.0f;
+    }
+
     for (Enemy& enemy : enemies)
     {
         enemy.update(player.getPosition());
@@ -46,6 +78,19 @@ void Game::update()
     if (IsKeyReleased(KEY_T)) // DEV KEY
     {
         for (auto &enemy : enemies)
+        {
+            enemy.kill();
+        }
+    }
+    if (IsKeyReleased(KEY_UP)) { currentCell = CELLNORTH; } // DEV KEY
+    if (IsKeyReleased(KEY_DOWN)) { currentCell = CELLSOUTH; } // DEV KEY
+    if (IsKeyReleased(KEY_RIGHT)) { currentCell = CELLEAST; } // DEV KEY
+    if (IsKeyReleased(KEY_LEFT)) { currentCell = CELLWEST; } // DEV KEY
+    if (IsKeyReleased(KEY_SPACE)) { currentCell = CENTRE; } // DEV KEY
+
+    if (currentCell == CENTRE)
+    {
+        for (auto& enemy : enemies)
         {
             enemy.kill();
         }
@@ -107,52 +152,60 @@ void Game::collisionCheck()
 
 void Game::enemySpawning(int t_num)
 {
-    Vector2 start = { 0.0f, 0.0f };
-    Direction direction;
-    int limit;
-
-    if (t_num < MAX_ENEMIES) // Loop once, spawn specific enemy
+    if (currentCell != CENTRE)
     {
-        limit = 1;
-    }
-    else // Spawn all enemies
-    {
-        limit = MAX_ENEMIES;
-    }
+        Vector2 start = { 0.0f, 0.0f };
+        Direction direction;
+        int limit;
 
-    for (int i = 0; i < limit; i++)
-    {
-        direction = (Direction)(rand() % 4);
-
-        switch (direction)
+        if (t_num < MAX_ENEMIES) // Loop once, spawn specific enemy
         {
-        case NORTH:
-            start.x = (rand() % (SCREEN_WIDTH - 50)) + 50;
-            start.y = 20;
-            break;
-        case SOUTH:
-            start.x = (rand() % (SCREEN_WIDTH - 50)) + 50;
-            start.y = SCREEN_HEIGHT + 20;
-            break;
-        case EAST:
-            start.x = SCREEN_WIDTH + 20;
-            start.y = (rand() % (SCREEN_HEIGHT - 50)) + 50;
-            break;
-        case WEST:
-            start.x = -20.0f;
-            start.y = (rand() % (SCREEN_HEIGHT - 50)) + 50;
-            break;
-        default:
-            break;
+            limit = 1;
+        }
+        else // Spawn all enemies
+        {
+            limit = MAX_ENEMIES;
         }
 
-        if (t_num == MAX_ENEMIES)
+        for (int i = 0; i < limit; i++)
         {
-            enemies[i].spawn(start);
-        }
-        else if (t_num < MAX_ENEMIES)
-        {
-            enemies[t_num].spawn(start);
+            direction = (Direction)(rand() % 4);
+
+            while (direction == (int)currentCell)
+            {
+                direction = (Direction)(rand() % 4);
+            }
+
+            switch (direction)
+            {
+            case NORTH:
+                start.x = (rand() % (SCREEN_WIDTH - 50)) + 50;
+                start.y = 20;
+                break;
+            case SOUTH:
+                start.x = (rand() % (SCREEN_WIDTH - 50)) + 50;
+                start.y = SCREEN_HEIGHT + 20;
+                break;
+            case EAST:
+                start.x = SCREEN_WIDTH + 20;
+                start.y = (rand() % (SCREEN_HEIGHT - 50)) + 50;
+                break;
+            case WEST:
+                start.x = -20.0f;
+                start.y = (rand() % (SCREEN_HEIGHT - 50)) + 50;
+                break;
+            default:
+                break;
+            }
+
+            if (t_num == MAX_ENEMIES)
+            {
+                enemies[i].spawn(start);
+            }
+            else if (t_num < MAX_ENEMIES)
+            {
+                enemies[t_num].spawn(start);
+            }
         }
     }
 }
@@ -168,6 +221,60 @@ void Game::findNPCTarget()
             m_targetsArray[m_numTargets] = enemies[i].getPosition();
             m_numTargets++;
         }
+    }
+}
+
+void Game::moveCell()
+{
+    if (currentCell == CENTRE)
+    {
+        if (player.getPosition().x <= 0.0f)
+        {
+            currentCell = CELLWEST;
+            player.setPositionX(SCREEN_WIDTH - player.getRadius());
+            enemySpawning(MAX_ENEMIES);
+        }
+        else if (player.getPosition().x >= SCREEN_WIDTH)
+        {
+            currentCell = CELLEAST;
+            player.setPositionX(0.0f);
+            enemySpawning(MAX_ENEMIES);
+        }
+        else if (player.getPosition().y <= 0.0f)
+        {
+            currentCell = CELLNORTH;
+            player.setPositionY(SCREEN_HEIGHT);
+            enemySpawning(MAX_ENEMIES);
+        }
+        else if (player.getPosition().y >= SCREEN_HEIGHT)
+        {
+            currentCell = CELLSOUTH;
+            player.setPositionY(0.0f);
+            enemySpawning(MAX_ENEMIES);
+        }
+
+        return;
+    }
+
+    if (player.getPosition().y <= 0.0f && currentCell == CELLSOUTH)
+    {
+        currentCell = CENTRE;
+        player.setPositionY(SCREEN_HEIGHT - player.getRadius());
+    }
+    else if (player.getPosition().y >= SCREEN_HEIGHT + player.getRadius() && currentCell == CELLNORTH)
+    {
+        currentCell = CENTRE;
+        player.setPositionY(0);
+    }
+    else if (player.getPosition().x <= 0.0f && currentCell == CELLEAST)
+    {
+        currentCell = CENTRE;
+        player.setPositionX(SCREEN_WIDTH - player.getRadius());
+    }
+    else if (player.getPosition().x >= SCREEN_WIDTH && currentCell == CELLWEST)
+    {
+        currentCell = CENTRE;
+        player.setPositionX(0);
     }
 }
 
