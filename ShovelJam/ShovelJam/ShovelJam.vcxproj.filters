@@ -52,6 +52,9 @@
       <Filter>Source Files\Behaviour Pattern</Filter>
     </ClCompile>
     <ClCompile Include="src\DefensiveBehaviour.cpp">
+      <Filter>Source Files\Behaviour Pattern</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Supply.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -84,6 +87,9 @@
       <Filter>Header Files\Behaviour Pattern</Filter>
     </ClInclude>
     <ClInclude Include="include\DefensiveBehaviour.h">
+      <Filter>Header Files\Behaviour Pattern</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Supply.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -26,6 +26,9 @@ public:
     float getBulletRadius() { return bullets[activeBullet].getRadius(); }
     void resetBullet();
 
+    void addSupply(int t_val) { supplyValue += t_val; }
+    int currentSupply() { return supplyValue; }
+
 private:
     static const int MAX_BULLETS = 10;
     const int MAX_IFRAMES = 0.5f;
@@ -34,5 +37,6 @@ private:
     int iFrames;
     float dt;
     float m_shootingCooldown;
+    int supplyValue;
 };
 

@@ -2,7 +2,7 @@
 #include "stdio.h"
 #include "../include/game.h"
 
-Game::Game() : m_numTargets(0), currentCell(CELLWEST), dt(0)
+Game::Game() : m_numTargets(0), currentCell(CENTRE), dt(0)
 {
 }
 
@@ -13,9 +13,18 @@ void Game::init()
     npcs.push_back(std::make_shared<NPC>(NPC("Fred", {500.0f, 500.0f}, std::make_shared<DefensiveBehaviour>())));
     npcs.push_back(std::make_shared<NPC>(NPC("Maddy", {700.0f, 300.0f}, std::make_shared<OffensiveBehaviour>())));
     npcs.push_back(std::make_shared<NPC>(NPC("Ferdia", {400.0f, 600.0f}, std::make_shared<OffensiveBehaviour>())));
+
+    supplies.reserve(MAX_SUPPLIES);
+    supplies.push_back(std::make_shared<Supply>());
+
     for (auto& npc : npcs)
     {
         npc->init();
+    }
+
+    for (auto& supply : supplies)
+    {
+        supply->init();
     }
 }
 
@@ -31,6 +40,11 @@ void Game::draw()
     {
         npc->draw();
     }
+    for (auto& supply : supplies)
+    {
+        supply->draw();
+    }
+
     std::string cellText;
     switch (currentCell)
     {
@@ -54,6 +68,10 @@ void Game::draw()
     }
 
     DrawText(cellText.c_str(), 500, 10, 30, WHITE);
+
+    std::string supplyText;
+    supplyText = "Supplies: " + std::to_string(player.currentSupply());
+    DrawText(supplyText.c_str(), 10, 50, 20, WHITE);
 }
 
 void Game::update()
@@ -148,6 +166,18 @@ void Game::collisionCheck()
             npc->startFollowing();
         }
     }
+
+    for (auto& supply : supplies)
+    {
+        if (supply->isActive())
+        {
+            if (CheckCollisionCircles(player.getPosition(), player.getRadius(), supply->getPosition(), supply->getRadius()))
+            {
+                player.addSupply(supply->supplyValue());
+                supply->kill();
+            }
+        }
+    }
 }
 
 void Game::enemySpawning(int t_num)
@@ -210,6 +240,19 @@ void Game::enemySpawning(int t_num)
     }
 }
 
+void Game::supplySpawning(int t_amount)
+{
+    Vector2 pos;
+
+    for (int i = 0; i < t_amount; i++)
+    {
+        pos.x = (rand() % SCREEN_WIDTH - 50) + 50;
+        pos.y = (rand() % SCREEN_HEIGHT - 50) + 50;
+
+        supplies.at(i)->spawn(pos);
+    }
+}
+
 void Game::findNPCTarget()
 {
     m_numTargets = 0;
@@ -233,24 +276,28 @@ void Game::moveCell()
             currentCell = CELLWEST;
             player.setPositionX(SCREEN_WIDTH - player.getRadius());
             enemySpawning(MAX_ENEMIES);
+            supplySpawning(1);
         }
         else if (player.getPosition().x >= SCREEN_WIDTH)
         {
             currentCell = CELLEAST;
             player.setPositionX(0.0f);
             enemySpawning(MAX_ENEMIES);
+            supplySpawning(1);
         }
         else if (player.getPosition().y <= 0.0f)
         {
             currentCell = CELLNORTH;
             player.setPositionY(SCREEN_HEIGHT);
             enemySpawning(MAX_ENEMIES);
+            supplySpawning(1);
         }
         else if (player.getPosition().y >= SCREEN_HEIGHT)
         {
             currentCell = CELLSOUTH;
             player.setPositionY(0.0f);
             enemySpawning(MAX_ENEMIES);
+            supplySpawning(1);
         }
 
         return;

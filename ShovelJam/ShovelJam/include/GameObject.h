@@ -13,10 +13,7 @@ public:
 	virtual void movement();
 	virtual void damage();
 	virtual void follow(Vector2& t_target);
-	virtual bool isActive() 
-	{ 
-		return m_active; 
-	}
+	virtual bool isActive() { return m_active; }
 
 	void draw();
 	void kill();
