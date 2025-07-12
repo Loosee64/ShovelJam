@@ -7,14 +7,17 @@ class Enemy :
 {
 public:
     Enemy();
-    virtual void init();
-    virtual void update();
-    virtual void movement();
+    virtual void init() override;
+    virtual void movement() override;
+    virtual void damage() override;
 
+    void update(Vector2 t_target);
     void draw();
 
     void spawn(Vector2 t_start);
     void kill();
+    void track(Vector2& t_target);
+    void recoil(float t_scale);
 
     bool isActive() { return m_active; }
 

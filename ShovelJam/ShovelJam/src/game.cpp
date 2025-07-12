@@ -22,7 +22,7 @@ void Game::update()
     player.update();
     for (Enemy& enemy : enemies)
     {
-        enemy.update();
+        enemy.update(player.getPosition());
     }
     collisionCheck();
 
@@ -35,10 +35,18 @@ void Game::collisionCheck()
     {
         if (enemy.isActive())
         {
-            if (CheckCollisionCircles(player.getBulletPos(), player.getRadius(), enemy.getPosition(), enemy.getRadius()))
+            if (player.getActiveBullet() > -1)
             {
-                enemy.kill();
-                player.resetBullet();
+                if (CheckCollisionCircles(player.getBulletPos(), player.getBulletRadius(), enemy.getPosition(), enemy.getRadius()))
+                {
+                    enemy.damage();
+                    player.resetBullet();
+                }
+            }
+            if (CheckCollisionCircles(player.getPosition(), player.getRadius(), enemy.getPosition(), enemy.getRadius()))
+            {
+                player.damage();
+                enemy.recoil(20.0f);
             }
         }
     }

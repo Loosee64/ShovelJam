@@ -3,13 +3,16 @@
 #include "raymath.h"
 #include "globals.h"
 #include "reasings.h"
+#include <iostream>
 
 class GameObject
 {
 public:
 	virtual void init() = 0;
-	virtual void update() = 0;
+	virtual void update();
 	virtual void movement();
+	virtual void damage();
+	virtual void kill();
 
 	void draw();
 
@@ -22,5 +25,6 @@ protected:
 	float m_radius;
 	Color m_colour;
 	float m_speed;
+	int m_health;
 };
 

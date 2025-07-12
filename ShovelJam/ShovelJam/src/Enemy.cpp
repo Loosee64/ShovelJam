@@ -12,25 +12,32 @@ void Enemy::init()
 	m_colour = RED;
 	m_radius = 25.0f;
 	m_speed = 2.5f;
+	m_health = 2;
 }
 
-void Enemy::update()
+void Enemy::update(Vector2 t_target)
 {
 	if (m_active)
 	{
+		if (m_health <= 0)
+		{
+			kill();
+		}
+
+		track(t_target);
 		movement();
 	}
+}
+
+void Enemy::damage()
+{
+	m_health--;
+	recoil(5.0f);
 }
 
 
 void Enemy::movement()
 {
-	if (m_position.x < 20.0f) { m_direction = SOUTH; }
-	if (m_position.x > 700.0f) { m_direction = NORTH; }
-
-	if (m_direction == NORTH) { m_velocity.x = -m_speed; }
-	if (m_direction == SOUTH) { m_velocity.x = m_speed; }
-
 	m_position += m_velocity;
 }
 
@@ -44,6 +51,7 @@ void Enemy::draw()
 
 void Enemy::spawn(Vector2 t_start)
 {
+	m_health = 2;
 	m_position = t_start;
 	m_active = true;
 }
@@ -51,4 +59,20 @@ void Enemy::spawn(Vector2 t_start)
 void Enemy::kill()
 {
 	m_active = false;
+}
+
+void Enemy::track(Vector2& t_target)
+{
+	Vector2 heading;
+
+	heading = t_target - m_position;
+	heading = Vector2Normalize(heading);
+	heading = Vector2Scale(heading, m_speed);
+
+	m_velocity = heading;
+}
+
+void Enemy::recoil(float t_scale)
+{
+	m_position -= Vector2Scale(m_velocity, t_scale);
 }

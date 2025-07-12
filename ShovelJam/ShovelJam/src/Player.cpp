@@ -1,6 +1,6 @@
 #include "Player.h"
 
-Player::Player() : activeBullet(-1)
+Player::Player() : activeBullet(-1), iFrames(0)
 {
 	init();
 }
@@ -12,10 +12,21 @@ void Player::init()
 	m_colour = YELLOW;
 	m_radius = 25.0f;
 	m_speed = 5.0f;
+	m_health = 5;
 }
 
 void Player::update()
 {
+	if (iFrames > 0)
+	{
+		iFrames--;
+	}
+
+	if (m_health <= 0)
+	{
+		kill();
+	}
+
 	input();
 	movement();
 
@@ -30,6 +41,21 @@ void Player::movement()
 {
 	m_position += m_velocity;
 	m_velocity = { 0.0f, 0.0f };
+}
+
+void Player::kill()
+{
+	m_colour = BLUE;
+}
+
+void Player::damage()
+{
+	if (iFrames <= 0)
+	{
+		m_health--;
+		//iFrames = MAX_IFRAMES;
+	}
+	std::cout << m_health << "\n";
 }
 
 void Player::draw()
@@ -68,5 +94,8 @@ void Player::shoot()
 
 void Player::resetBullet()
 {
-	bullets[activeBullet].reset();
+	if (activeBullet > -1)
+	{
+		bullets[activeBullet].reset();
+	}
 }
