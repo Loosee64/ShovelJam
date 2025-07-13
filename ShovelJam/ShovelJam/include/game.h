@@ -18,6 +18,9 @@ public:
     void update();
 
     void collisionCheck();
+
+    void bunksInteract(Building& t_bunks);
+
     void enemySpawning(int t_num);
     void waveSpawning();
     void supplySpawning(int t_amount);
@@ -26,7 +29,8 @@ public:
 
 private:
     static const int MAX_ENEMIES = 10;
-    static const int MAX_NPCS = 3;
+    static const int MAX_NPCS = 50;
+    static const int MAX_PARTY = 3;
     static const int MAX_SUPPLIES = 1;
     static const int MAX_BUILDINGS = 1;
 
@@ -35,7 +39,11 @@ private:
     int enemyKill;
     float wavedt;
     bool waveComplete;
-    std::vector<std::shared_ptr<NPC>> npcs;
+    bool canInteract;
+    std::vector<std::shared_ptr<NPC>> party;
+    std::vector<std::shared_ptr<NPC>> village;
+    int m_numInVillage;
+
     std::vector<std::shared_ptr<Supply>> supplies;
     std::vector<std::shared_ptr<Building>> buildings;
 

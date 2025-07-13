@@ -27,6 +27,8 @@ public:
 
     void newArea(Cell t_direction, Vector2 t_start);
 
+    std::string getName() { return m_name; }
+
     int getActiveBullet() { return m_activeBullet; }
     Vector2 getBulletPos() { return bullets[m_activeBullet].getPosition(); }
     float getBulletRadius() { return bullets[m_activeBullet].getRadius(); }

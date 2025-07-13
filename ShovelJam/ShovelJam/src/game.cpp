@@ -2,25 +2,30 @@
 #include "stdio.h"
 #include "../include/game.h"
 
-Game::Game() : m_numTargets(0), currentCell(CENTRE), dt(0), wavedt(0), enemyKill(0), waveComplete(false)
+Game::Game() : m_numTargets(0), currentCell(CENTRE), dt(0), wavedt(0), enemyKill(0), waveComplete(false), m_numInVillage(0), canInteract(true)
 {
 }
 
 void Game::init()
 {
     enemySpawning(MAX_ENEMIES);
-    npcs.reserve(MAX_NPCS);
-    npcs.push_back(std::make_shared<NPC>(NPC("Fred", {500.0f, 500.0f}, std::make_shared<DefensiveBehaviour>())));
-    npcs.push_back(std::make_shared<NPC>(NPC("Maddy", {700.0f, 300.0f}, std::make_shared<OffensiveBehaviour>())));
-    npcs.push_back(std::make_shared<NPC>(NPC("Ferdia", {400.0f, 600.0f}, std::make_shared<OffensiveBehaviour>())));
+
+    village.reserve(MAX_NPCS);
+
+    party.reserve(MAX_PARTY);
+    party.push_back(std::make_shared<NPC>(NPC("Fred", {500.0f, 500.0f}, std::make_shared<DefensiveBehaviour>())));
+    party.push_back(std::make_shared<NPC>(NPC("Maddy", {700.0f, 300.0f}, std::make_shared<OffensiveBehaviour>())));
+    party.push_back(std::make_shared<NPC>(NPC("Ferdia", {400.0f, 600.0f}, std::make_shared<OffensiveBehaviour>())));
 
     supplies.reserve(MAX_SUPPLIES);
     supplies.push_back(std::make_shared<Supply>());
 
     buildings.reserve(MAX_BUILDINGS);
     buildings.push_back(std::make_shared<Building>("Supply Shed", 1, 10));
+    buildings.push_back(std::make_shared<Building>("Bunks", 1, 10));
+    buildings.push_back(std::make_shared<Building>("Barracks", 1, 20));
 
-    for (auto& npc : npcs)
+    for (auto& npc : party)
     {
         npc->init();
     }
@@ -30,10 +35,13 @@ void Game::init()
         supply->init();
     }
 
+    float offset = 0.0f;
+
     for (auto& building : buildings)
     {
         building->init();
-        building->spawn({ 200.0f, 200.0f });
+        building->spawn({ 200.0f + offset, 200.0f });
+        offset += 200.0f;
     }
 }
 
@@ -45,7 +53,7 @@ void Game::draw()
     {
         enemy.draw();
     }
-    for (auto &npc : npcs)
+    for (auto &npc : party)
     {
         npc->draw();
     }
@@ -101,6 +109,7 @@ void Game::update()
     {
         moveCell();
         dt = 0.0f;
+        canInteract = true;
     }
 
     for (Enemy& enemy : enemies)
@@ -134,10 +143,18 @@ void Game::update()
 
     findNPCTarget();
 
-    for (auto& npc : npcs)
+    for (auto& npc : party)
     {
         npc->findTarget(m_targetsArray, m_numTargets);
         npc->update(player.getPosition());
+    }
+
+    if (currentCell == CENTRE)
+    {
+        for (auto& building : buildings)
+        {
+            building->update();
+        }
     }
 
     if (!waveComplete)
@@ -166,7 +183,7 @@ void Game::collisionCheck()
                 enemy.recoil(20.0f);
             }
 
-            for (auto& npc : npcs)
+            for (auto& npc : party)
             {
                 if (npc->isActive())
                 {
@@ -180,7 +197,7 @@ void Game::collisionCheck()
         }
     }
 
-    for (auto &npc : npcs)
+    for (auto &npc : party)
     {
         if (CheckCollisionCircles(player.getPosition(), player.getRadius(), npc->getPosition(), npc->getRadius()))
         {
@@ -204,12 +221,47 @@ void Game::collisionCheck()
     {
         for (auto& building : buildings)
         {
+            canInteract = false;
             if (CheckCollisionCircleRec(player.getPosition(), player.getRadius(), building->getBody()))
             {
-                building->interact(player.currentSupply());
-                player.subtractSupply(player.currentSupply());
-                player.addSupply(building->returnValue());
+                if (building->getType() == "Bunks")
+                {
+                    bunksInteract(*building);
+                }
+                if (!building->completed())
+                {
+                    building->build(player.currentSupply());
+                    player.subtractSupply(player.currentSupply());
+                    player.addSupply(building->returnValue());
+                }
             }
+        }
+    }
+}
+
+void Game::bunksInteract(Building& t_bunks)
+{
+    if (t_bunks.completed())
+    {
+        if (party.size() == 0)
+        {
+            for (int i = MAX_PARTY - 1; i >= 0; i--)
+            {
+                party.push_back(village.at(i));
+                village.pop_back();
+                std::cout << party.back()->getName() << " has been added to the party\n";
+                m_numInVillage--;
+            }
+
+            return;
+        }
+
+        for (int i = party.size() - 1; i >= 0; i--)
+        {
+            village.push_back(party.at(i));
+            party.pop_back();
+            std::cout << village.at(m_numInVillage)->getName() << " is in the bunks\n";
+            m_numInVillage++;
         }
     }
 }
@@ -356,7 +408,7 @@ void Game::moveCell()
 
         float offset = 50.0f;
 
-        for (auto& npc : npcs)
+        for (auto& npc : party)
         {
             if (npc->isActive())
             {
@@ -402,7 +454,7 @@ void Game::moveCell()
         float x;
         float y;
 
-        for (auto& npc : npcs)
+        for (auto& npc : party)
         {
             x = (rand() % 400) + 200;
             y = (rand() % 400) + 200;
