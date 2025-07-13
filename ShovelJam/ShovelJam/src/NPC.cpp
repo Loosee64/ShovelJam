@@ -1,7 +1,7 @@
 #include "NPC.h"
 
 NPC::NPC(std::string t_name, Vector2 t_pos, std::shared_ptr<NPCBehaviour> t_behaviour) : m_name(t_name), m_following(false), m_activeBullet(-1), dt(0), m_shootingCooldown(1.0f), m_maxHealth(3.0f), 
-												m_target({100000.0f, 100000.0f }), approachDistance(100.0f), behaviour(t_behaviour)
+												m_target({100000.0f, 100000.0f }), approachDistance(100.0f), behaviour(t_behaviour), areaTimer(-1.0f), areaTimerMax(0.5f)
 {
 	m_position = t_pos;;
 	init();
@@ -31,11 +31,27 @@ void NPC::update(Vector2 t_target)
 {
 	dt += GetFrameTime();
 
+	if (areaTimer > -1.0f)
+	{
+		areaTimer += GetFrameTime();
+		if (areaTimer >= areaTimerMax)
+		{
+			areaTimer = -1.0f;
+		}
+		else
+		{
+			follow(m_newAreaTarget);
+		}
+	}
+
 	if (m_following)
 	{
 		follow(t_target);
 	}
-	approachTarget();
+	if (areaTimer == -1.0f)
+	{
+		approachTarget();
+	}
 
 	movement();
 
@@ -140,6 +156,42 @@ void NPC::approachTarget()
 	else if (!m_following)
 	{
 		m_velocity = { 0.0f, 0.0f };
+	}
+}
+
+void NPC::newArea(Cell t_direction, Vector2 t_start)
+{
+	areaTimer = 0.0f;
+
+	switch (t_direction)
+	{
+	case SOUTH:
+		m_position = t_start;
+		m_newAreaTarget = t_start;
+		m_newAreaTarget.y -= 100.0f;
+		break;
+	case NORTH:
+		m_position = t_start;
+		m_newAreaTarget = t_start;
+		m_newAreaTarget.y += 100.0f;
+		break;
+	case WEST:
+		m_position = t_start;
+		m_newAreaTarget = t_start;
+		m_newAreaTarget.x += 100.0f;
+		break;
+	case EAST:
+		m_position = t_start;
+		m_newAreaTarget = t_start;
+		m_newAreaTarget.x -= 100.0f;
+		break;
+	case BASE:
+		m_position = t_start;
+		m_newAreaTarget = t_start;
+		areaTimer = areaTimerMax;
+		break;
+	default:
+		break;
 	}
 }
 

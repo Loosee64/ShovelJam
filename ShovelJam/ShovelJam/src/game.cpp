@@ -149,7 +149,6 @@ void Game::collisionCheck()
                 enemy.recoil(20.0f);
             }
 
-
             for (auto& npc : npcs)
             {
                 if (npc->isActive())
@@ -325,6 +324,25 @@ void Game::moveCell()
             enemySpawning(MAX_ENEMIES);
         }
 
+        float offset = 50.0f;
+
+        for (auto npc : npcs)
+        {
+            if (npc->isActive())
+            {
+                if (currentCell <= CELLSOUTH)
+                {
+                    npc->newArea(currentCell, { player.getPosition().x + offset, player.getPosition().y });
+                    offset += offset;
+                }
+                if (currentCell > CELLSOUTH && currentCell < CENTRE)
+                {
+                    npc->newArea(currentCell, { player.getPosition().x, player.getPosition().y + offset });
+                    offset += offset;
+                }
+            }
+        }
+
         return;
     }
 
@@ -348,5 +366,19 @@ void Game::moveCell()
         currentCell = CENTRE;
         player.setPositionX(0);
     }
+
+    if (currentCell == CENTRE)
+    {
+        float x;
+        float y;
+
+        for (auto npc : npcs)
+        {
+            x = (rand() % 400) + 200;
+            y = (rand() % 400) + 200;
+            npc->newArea(currentCell, { x, y });
+        }
+    }
+
 }
 

@@ -8,8 +8,6 @@
 #include <vector>
 #include <string>
 
-enum Cell {CELLNORTH, CELLSOUTH, CELLEAST, CELLWEST, CENTRE};
-
 class Game
 {
 public:

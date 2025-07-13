@@ -16,7 +16,7 @@ public:
 
     void update(Vector2 t_target);
     void draw();
-    void startFollowing() { m_following = true; }
+    void startFollowing() { m_following = false; }
     void spawn(Vector2 t_start);
 
     bool isFollowing() { return m_following; }
@@ -24,6 +24,8 @@ public:
     void findTarget(Vector2* t_targets, int t_maxTargets);
     void shoot(Vector2 t_target);
     void approachTarget();
+
+    void newArea(Cell t_direction, Vector2 t_start);
 
     int getActiveBullet() { return m_activeBullet; }
     Vector2 getBulletPos() { return bullets[m_activeBullet].getPosition(); }
@@ -37,10 +39,15 @@ private:
     std::string m_name;
 
     Vector2 m_target;
+    Vector2 m_newAreaTarget;
 
     bool m_following;
     int m_activeBullet;
     float dt;
+
+    float areaTimer;
+    float areaTimerMax;
+
     float m_shootingCooldown;
 
     int m_maxHealth;
