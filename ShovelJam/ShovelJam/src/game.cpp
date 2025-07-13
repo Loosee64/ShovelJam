@@ -13,21 +13,23 @@ void Game::init()
     village.reserve(MAX_NPCS);
 
     party.reserve(MAX_PARTY);
-    party.push_back(std::make_shared<NPC>(NPC("Fred", {500.0f, 500.0f}, std::make_shared<DefensiveBehaviour>())));
-    party.push_back(std::make_shared<NPC>(NPC("Maddy", {700.0f, 300.0f}, std::make_shared<OffensiveBehaviour>())));
-    party.push_back(std::make_shared<NPC>(NPC("Ferdia", {400.0f, 600.0f}, std::make_shared<OffensiveBehaviour>())));
 
     supplies.reserve(MAX_SUPPLIES);
     supplies.push_back(std::make_shared<Supply>());
 
     buildings.reserve(MAX_BUILDINGS);
-    buildings.push_back(std::make_shared<Building>("Supply Shed", 1, 10));
-    buildings.push_back(std::make_shared<Building>("Bunks", 1, 10));
-    buildings.push_back(std::make_shared<Building>("Barracks", 1, 20));
+    buildings.push_back(std::make_shared<Building>(std::make_shared<SupplyShed>()));
+    buildings.push_back(std::make_shared<Building>(std::make_shared<Bunks>()));
+    buildings.push_back(std::make_shared<Building>(std::make_shared<Barracks>()));
 
     for (auto& npc : party)
     {
         npc->init();
+    }
+
+    for (auto& npc : village)
+    {
+        npc->resetTarget();
     }
 
     for (auto& supply : supplies)
@@ -67,6 +69,18 @@ void Game::draw()
         for (auto& building : buildings)
         {
             building->draw();
+        }
+
+        for (auto& npc : village)
+        {
+            npc->draw();
+        }
+    }
+    else
+    {
+        if (m_fieldNPC.use_count() > 0)
+        {
+            m_fieldNPC->draw();
         }
     }
 
@@ -155,6 +169,18 @@ void Game::update()
         {
             building->update();
         }
+
+        for (auto& npc : village)
+        {
+            npc->passive();
+        }
+    }
+    else
+    {
+        if (m_fieldNPC.use_count() > 0)
+        {
+            m_fieldNPC->update(player.getPosition());
+        }
     }
 
     if (!waveComplete)
@@ -197,11 +223,11 @@ void Game::collisionCheck()
         }
     }
 
-    for (auto &npc : party)
+    if (m_fieldNPC.use_count() > 0)
     {
-        if (CheckCollisionCircles(player.getPosition(), player.getRadius(), npc->getPosition(), npc->getRadius()))
+        if (CheckCollisionCircles(player.getPosition(), player.getRadius(), m_fieldNPC->getPosition(), m_fieldNPC->getRadius()))
         {
-            npc->startFollowing();
+            m_fieldNPC->startFollowing();
         }
     }
 
@@ -224,16 +250,19 @@ void Game::collisionCheck()
             canInteract = false;
             if (CheckCollisionCircleRec(player.getPosition(), player.getRadius(), building->getBody()))
             {
-                if (building->getType() == "Bunks")
+                if (building->getName() == "Bunks")
                 {
                     bunksInteract(*building);
                 }
                 if (!building->completed())
                 {
                     building->build(player.currentSupply());
-                    player.subtractSupply(player.currentSupply());
-                    player.addSupply(building->returnValue());
                 }
+                else
+                {
+                    building->interact(player.currentSupply());
+                }
+                player.subtractSupply(building->subractValue());
             }
         }
     }
@@ -247,10 +276,11 @@ void Game::bunksInteract(Building& t_bunks)
         {
             for (int i = MAX_PARTY - 1; i >= 0; i--)
             {
-                party.push_back(village.at(i));
+                party.push_back(village.back());
                 village.pop_back();
                 std::cout << party.back()->getName() << " has been added to the party\n";
                 m_numInVillage--;
+                party.back()->exitPassive();
             }
 
             return;
@@ -262,6 +292,7 @@ void Game::bunksInteract(Building& t_bunks)
             party.pop_back();
             std::cout << village.at(m_numInVillage)->getName() << " is in the bunks\n";
             m_numInVillage++;
+            village.back()->resetTarget();
         }
     }
 }
@@ -363,6 +394,16 @@ void Game::supplySpawning(int t_amount)
     }
 }
 
+void Game::fieldNPCSpawning()
+{
+    int randNum = rand() % 4;
+
+    if (randNum == 0)
+    {
+        m_fieldNPC = std::make_shared<NPC>(NPC("Barry", { 500.0f, 200.0f }, std::make_shared<OffensiveBehaviour>()));
+    }
+}
+
 void Game::findNPCTarget()
 {
     m_numTargets = 0;
@@ -425,6 +466,11 @@ void Game::moveCell()
             }
         }
 
+        if (currentCell != CENTRE)
+        {
+            fieldNPCSpawning();
+        }
+
         return;
     }
 
@@ -459,6 +505,31 @@ void Game::moveCell()
             x = (rand() % 400) + 200;
             y = (rand() % 400) + 200;
             npc->newArea(currentCell, { x, y });
+        }
+
+        if (m_fieldNPC.use_count() > 0)
+        {
+            if (m_fieldNPC->isFollowing())
+            {
+                if (party.size() < MAX_PARTY)
+                {
+                    m_fieldNPC->stopFollowing();
+                    party.push_back(m_fieldNPC);
+                    m_fieldNPC.reset();
+                }
+                else if (village.size() < MAX_NPCS)
+                {
+                    m_fieldNPC->stopFollowing();
+                    village.push_back(m_fieldNPC);
+                    m_fieldNPC.reset();
+                    m_numInVillage++;
+                    village.back()->resetTarget();
+                }
+                else
+                {
+                    m_fieldNPC->kill();
+                }
+            }
         }
     }
 

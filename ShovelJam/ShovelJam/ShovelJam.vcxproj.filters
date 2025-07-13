@@ -25,6 +25,12 @@
     <Filter Include="Source Files\Behaviour Pattern">
       <UniqueIdentifier>{2bc10e32-fd99-42e0-9d09-a85cedd256b8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Building Types">
+      <UniqueIdentifier>{b7bfc057-dbd6-4d13-91b3-6ba7251a5a57}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Building Types">
+      <UniqueIdentifier>{561275a6-2c2d-474e-9aa5-f6e32d564cd3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -59,6 +65,18 @@
     </ClCompile>
     <ClCompile Include="src\Building.cpp">
       <Filter>Source Files\Game Object</Filter>
+    </ClCompile>
+    <ClCompile Include="src\BuildingType.cpp">
+      <Filter>Source Files\Building Types</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Bunks.cpp">
+      <Filter>Source Files\Building Types</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SupplyShed.cpp">
+      <Filter>Source Files\Building Types</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Barracks.cpp">
+      <Filter>Source Files\Building Types</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -97,6 +115,18 @@
     </ClInclude>
     <ClInclude Include="include\Building.h">
       <Filter>Header Files\Game Object</Filter>
+    </ClInclude>
+    <ClInclude Include="include\BuildingType.h">
+      <Filter>Header Files\Building Types</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Bunks.h">
+      <Filter>Header Files\Building Types</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Barracks.h">
+      <Filter>Header Files\Building Types</Filter>
+    </ClInclude>
+    <ClInclude Include="include\SupplyShed.h">
+      <Filter>Header Files\Building Types</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

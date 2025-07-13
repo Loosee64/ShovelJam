@@ -16,7 +16,7 @@ void NPC::init()
 	m_velocity = { 0.0f, 0.0f };
 	m_colour = SKYBLUE;
 	m_radius = 25.0f;
-	m_speed = 3.5f;
+	m_speed = MAX_SPEED;
 	m_health = 5;
 	
 	m_active = true; // ---------- TEMP
@@ -157,6 +157,22 @@ void NPC::approachTarget()
 	{
 		m_velocity = { 0.0f, 0.0f };
 	}
+}
+
+void NPC::passive()
+{
+	if (m_position.x <= m_target.x + 50 && m_position.x >= m_target.x - 50 && 
+		m_position.y <= m_target.y + 50 && m_position.y >= m_target.y - 50)
+	{
+		m_target = behaviour->passive(*this);
+	}
+	follow(m_target);
+	movement();
+}
+
+void NPC::exitPassive()
+{
+	behaviour->exitPassive(*this);
 }
 
 void NPC::newArea(Cell t_direction, Vector2 t_start)

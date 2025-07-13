@@ -8,6 +8,9 @@
 class NPC :
     public GameObject
 {
+    friend class OffensiveBehaviour;
+    friend class DefensiveBehaviour;
+
 public:
     NPC(std::string t_name, Vector2 t_pos, std::shared_ptr<NPCBehaviour> t_behaviour);
     ~NPC();
@@ -16,7 +19,8 @@ public:
 
     void update(Vector2 t_target);
     void draw();
-    void startFollowing() { m_following = false; }
+    void startFollowing() { m_following = true; }
+    void stopFollowing() { m_following = false; }
     void spawn(Vector2 t_start);
 
     bool isFollowing() { return m_following; }
@@ -24,6 +28,9 @@ public:
     void findTarget(Vector2* t_targets, int t_maxTargets);
     void shoot(Vector2 t_target);
     void approachTarget();
+    void passive();
+    void resetTarget() { m_target = m_position; }
+    void exitPassive();
 
     void newArea(Cell t_direction, Vector2 t_start);
 
@@ -37,6 +44,7 @@ public:
 
 private:
     static const int MAX_BULLETS = 5;
+    const float MAX_SPEED = 3.5f;
     Bullet bullets[5];
     std::string m_name;
 

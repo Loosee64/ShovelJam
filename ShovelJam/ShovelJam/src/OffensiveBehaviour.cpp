@@ -21,6 +21,18 @@ bool OffensiveBehaviour::canApproach()
 	return false;
 }
 
-void OffensiveBehaviour::passive()
+Vector2 OffensiveBehaviour::passive(NPC& t_npc)
 {
+	Vector2 randVector;
+
+	randVector.x = (rand() % 500) + 200;
+	randVector.y = (rand() % 500) + 200;
+	t_npc.m_speed = 0.6f;
+
+	return randVector;
+}
+
+void OffensiveBehaviour::exitPassive(NPC& t_npc)
+{
+	t_npc.m_speed = t_npc.MAX_SPEED;
 }

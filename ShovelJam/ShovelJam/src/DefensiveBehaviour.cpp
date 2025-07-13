@@ -25,6 +25,11 @@ bool DefensiveBehaviour::canApproach()
 	return false;
 }
 
-void DefensiveBehaviour::passive()
+Vector2 DefensiveBehaviour::passive(NPC& t_npc)
+{
+	return t_npc.m_position;
+}
+
+void DefensiveBehaviour::exitPassive(NPC& t_npc)
 {
 }

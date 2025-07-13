@@ -130,8 +130,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Barracks.cpp" />
     <ClCompile Include="src\Building.cpp" />
+    <ClCompile Include="src\BuildingType.cpp" />
     <ClCompile Include="src\Bullet.cpp" />
+    <ClCompile Include="src\Bunks.cpp" />
     <ClCompile Include="src\DefensiveBehaviour.cpp" />
     <ClCompile Include="src\Enemy.cpp" />
     <ClCompile Include="src\game.cpp" />
@@ -141,10 +144,14 @@
     <ClCompile Include="src\OffensiveBehaviour.cpp" />
     <ClCompile Include="src\Player.cpp" />
     <ClCompile Include="src\Supply.cpp" />
+    <ClCompile Include="src\SupplyShed.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\Barracks.h" />
     <ClInclude Include="include\Building.h" />
+    <ClInclude Include="include\BuildingType.h" />
     <ClInclude Include="include\Bullet.h" />
+    <ClInclude Include="include\Bunks.h" />
     <ClInclude Include="include\DefensiveBehaviour.h" />
     <ClInclude Include="include\Enemy.h" />
     <ClInclude Include="include\game.h" />
@@ -155,6 +162,7 @@
     <ClInclude Include="include\OffensiveBehaviour.h" />
     <ClInclude Include="include\Player.h" />
     <ClInclude Include="include\Supply.h" />
+    <ClInclude Include="include\SupplyShed.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

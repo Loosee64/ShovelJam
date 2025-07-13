@@ -6,6 +6,11 @@
 #include "NPC.h"
 #include "Supply.h"
 #include "Building.h"
+
+#include "Bunks.h"
+#include "Barracks.h"
+#include "SupplyShed.h"
+
 #include <vector>
 #include <string>
 
@@ -24,6 +29,8 @@ public:
     void enemySpawning(int t_num);
     void waveSpawning();
     void supplySpawning(int t_amount);
+    void fieldNPCSpawning();
+
     void findNPCTarget();
     void moveCell();
 
@@ -42,6 +49,7 @@ private:
     bool canInteract;
     std::vector<std::shared_ptr<NPC>> party;
     std::vector<std::shared_ptr<NPC>> village;
+    std::shared_ptr<NPC> m_fieldNPC;
     int m_numInVillage;
 
     std::vector<std::shared_ptr<Supply>> supplies;
