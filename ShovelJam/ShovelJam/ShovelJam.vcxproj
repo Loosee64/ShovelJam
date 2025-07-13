@@ -130,6 +130,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Building.cpp" />
     <ClCompile Include="src\Bullet.cpp" />
     <ClCompile Include="src\DefensiveBehaviour.cpp" />
     <ClCompile Include="src\Enemy.cpp" />
@@ -142,6 +143,7 @@
     <ClCompile Include="src\Supply.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\Building.h" />
     <ClInclude Include="include\Bullet.h" />
     <ClInclude Include="include\DefensiveBehaviour.h" />
     <ClInclude Include="include\Enemy.h" />

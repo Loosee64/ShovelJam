@@ -5,6 +5,7 @@
 #include "Enemy.h"
 #include "NPC.h"
 #include "Supply.h"
+#include "Building.h"
 #include <vector>
 #include <string>
 
@@ -27,6 +28,7 @@ private:
     static const int MAX_ENEMIES = 10;
     static const int MAX_NPCS = 3;
     static const int MAX_SUPPLIES = 1;
+    static const int MAX_BUILDINGS = 1;
 
     Player player;
     Enemy enemies[MAX_ENEMIES];
@@ -35,6 +37,7 @@ private:
     bool waveComplete;
     std::vector<std::shared_ptr<NPC>> npcs;
     std::vector<std::shared_ptr<Supply>> supplies;
+    std::vector<std::shared_ptr<Building>> buildings;
 
     Vector2 m_targetsArray[MAX_ENEMIES];
     int m_numTargets;

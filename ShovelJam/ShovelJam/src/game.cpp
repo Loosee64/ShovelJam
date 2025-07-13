@@ -17,6 +17,9 @@ void Game::init()
     supplies.reserve(MAX_SUPPLIES);
     supplies.push_back(std::make_shared<Supply>());
 
+    buildings.reserve(MAX_BUILDINGS);
+    buildings.push_back(std::make_shared<Building>("Supply Shed", 1, 10));
+
     for (auto& npc : npcs)
     {
         npc->init();
@@ -25,6 +28,12 @@ void Game::init()
     for (auto& supply : supplies)
     {
         supply->init();
+    }
+
+    for (auto& building : buildings)
+    {
+        building->init();
+        building->spawn({ 200.0f, 200.0f });
     }
 }
 
@@ -43,6 +52,14 @@ void Game::draw()
     for (auto& supply : supplies)
     {
         supply->draw();
+    }
+
+    if (currentCell == CENTRE)
+    {
+        for (auto& building : buildings)
+        {
+            building->draw();
+        }
     }
 
     std::string cellText;
@@ -179,6 +196,19 @@ void Game::collisionCheck()
             {
                 player.addSupply(supply->supplyValue());
                 supply->kill();
+            }
+        }
+    }
+
+    if (currentCell == CENTRE && IsKeyReleased(KEY_E))
+    {
+        for (auto& building : buildings)
+        {
+            if (CheckCollisionCircleRec(player.getPosition(), player.getRadius(), building->getBody()))
+            {
+                building->interact(player.currentSupply());
+                player.subtractSupply(player.currentSupply());
+                player.addSupply(building->returnValue());
             }
         }
     }
@@ -326,7 +356,7 @@ void Game::moveCell()
 
         float offset = 50.0f;
 
-        for (auto npc : npcs)
+        for (auto& npc : npcs)
         {
             if (npc->isActive())
             {
@@ -372,7 +402,7 @@ void Game::moveCell()
         float x;
         float y;
 
-        for (auto npc : npcs)
+        for (auto& npc : npcs)
         {
             x = (rand() % 400) + 200;
             y = (rand() % 400) + 200;
