@@ -2,7 +2,8 @@
 #include "stdio.h"
 #include "../include/game.h"
 
-Game::Game() : m_numTargets(0), currentCell(CENTRE), dt(0), wavedt(0), enemyKill(0), waveComplete(false), m_numInVillage(0), canInteract(true)
+Game::Game() : m_numTargets(0), currentCell(CENTRE), dt(0), wavedt(0), enemyKill(0), waveComplete(false), m_numInVillage(0), canInteract(true), time(DAYCYCLE::DAY),
+                timedt(0.0f), m_dayCount(1), m_dayText(""), m_raid(false), m_timeText("")
 {
 }
 
@@ -13,6 +14,7 @@ void Game::init()
     village.reserve(MAX_NPCS);
 
     party.reserve(MAX_PARTY);
+    party.push_back(std::make_shared<NPC>(NPC("Barry", { 500.0f, 200.0f }, std::make_shared<OffensiveBehaviour>())));
 
     supplies.reserve(MAX_SUPPLIES);
     supplies.push_back(std::make_shared<Supply>());
@@ -49,6 +51,15 @@ void Game::init()
 
 void Game::draw()
 {
+    if (time == DAYCYCLE::DAY)
+    {
+        ClearBackground(ORANGE);
+    }
+    else if (time == DAYCYCLE::NIGHT)
+    {
+        ClearBackground(BLACK);
+    }
+
     DrawFPS(0, 0);
     player.draw();
     for (Enemy& enemy : enemies)
@@ -74,6 +85,14 @@ void Game::draw()
         for (auto& npc : village)
         {
             npc->draw();
+        }
+
+        if (m_raid)
+        {
+            for (auto& npc : barracks)
+            {
+                npc->draw();
+            }
         }
     }
     else
@@ -111,11 +130,18 @@ void Game::draw()
     std::string supplyText;
     supplyText = "Supplies: " + std::to_string(player.currentSupply());
     DrawText(supplyText.c_str(), 10, 50, 20, WHITE);
+
+    m_dayText = "Day: " + std::to_string(m_dayCount);
+    DrawText(m_dayText.c_str(), 10, 70, 20, WHITE);
+
+    DrawText(m_timeText.c_str(), 10, 90, 20, WHITE);
 }
 
 void Game::update()
 {
     dt += GetFrameTime();
+
+    dayCycle(false);
 
     player.update();
 
@@ -147,7 +173,7 @@ void Game::update()
     if (IsKeyReleased(KEY_LEFT)) { currentCell = CELLWEST; } // DEV KEY
     if (IsKeyReleased(KEY_SPACE)) { currentCell = CENTRE; } // DEV KEY
 
-    if (currentCell == CENTRE)
+    if (currentCell == CENTRE && !m_raid)
     {
         for (auto& enemy : enemies)
         {
@@ -172,7 +198,24 @@ void Game::update()
 
         for (auto& npc : village)
         {
-            npc->passive();
+            if (!m_raid)
+            {
+                npc->passive();
+            }
+            else
+            {
+                npc->findTarget(m_targetsArray, m_numTargets);
+                npc->update({ 0.0f, 0.0f });
+            }
+        }
+
+        if (m_raid)
+        {
+            for (auto& npc : barracks)
+            {
+                npc->findTarget(m_targetsArray, m_numTargets);
+                npc->update({ 0.0f, 0.0f });
+            }
         }
     }
     else
@@ -220,6 +263,20 @@ void Game::collisionCheck()
                     }
                 }
             }
+            if (m_raid)
+            {
+                for (auto& npc : barracks)
+                {
+                    if (npc->isActive())
+                    {
+                        if (CheckCollisionCircles(npc->getBulletPos(), npc->getBulletRadius(), enemy.getPosition(), enemy.getRadius()))
+                        {
+                            enemy.damage();
+                            npc->resetBullet();
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -250,10 +307,7 @@ void Game::collisionCheck()
             canInteract = false;
             if (CheckCollisionCircleRec(player.getPosition(), player.getRadius(), building->getBody()))
             {
-                if (building->getName() == "Bunks")
-                {
-                    bunksInteract(*building);
-                }
+                buildingInteract(*building);
                 if (!building->completed())
                 {
                     building->build(player.currentSupply());
@@ -270,11 +324,27 @@ void Game::collisionCheck()
 
 void Game::bunksInteract(Building& t_bunks)
 {
+    int limit = 0;
+
     if (t_bunks.completed())
     {
+        if (time == DAYCYCLE::NIGHT)
+        {
+            dayCycle(true);
+            return;
+        }
+
         if (party.size() == 0)
         {
-            for (int i = MAX_PARTY - 1; i >= 0; i--)
+            if (village.size() > MAX_PARTY)
+            {
+                limit = MAX_PARTY;
+            }
+            else
+            {
+                limit = village.size();
+            }
+            for (int i = limit - 1; i >= 0; i--)
             {
                 party.push_back(village.back());
                 village.pop_back();
@@ -297,24 +367,57 @@ void Game::bunksInteract(Building& t_bunks)
     }
 }
 
+void Game::buildingInteract(Building& t_building)
+{
+    std::vector<std::shared_ptr<NPC>> npcs;
+
+    if (t_building.getName() == "Bunks")
+    {
+        bunksInteract(t_building);
+        return;
+    }
+    
+    if (t_building.completed())
+    {
+        if (party.size() > 0)
+        {
+            for (int i = party.size() - 1; i >= 0; i--)
+            {
+                npcs.push_back(party.back());
+                party.pop_back();
+                std::cout << npcs.back()->getName() << " was added to the " << t_building.getName() << "\n";
+            }
+        }
+        else
+        {
+            npcs = barracks;
+            for (int i = npcs.size() - 1; i >= 0; i--)
+            {
+                party.push_back(npcs.back());
+                npcs.pop_back();
+                std::cout << party.back()->getName() << " was added to the party\n";
+            }
+        }
+
+        if (t_building.getName() == "Barracks")
+        {
+            for (auto& npc : npcs)
+            {
+                barracks.push_back(npcs.back());
+                npcs.pop_back();
+            }
+        }
+    }
+}
+
 void Game::enemySpawning(int t_num)
 {
-    if (currentCell != CENTRE)
+    if ((currentCell != CENTRE && time == DAYCYCLE::DAY) || (m_raid && currentCell == CENTRE))
     {
         Vector2 start = { 0.0f, 0.0f };
         Direction direction;
-        int limit;
 
-        if (t_num < MAX_ENEMIES) // Loop once, spawn specific enemy
-        {
-            limit = 1;
-        }
-        else // Spawn all enemies
-        {
-            limit = MAX_ENEMIES;
-        }
-
-        for (int i = 0; i < limit; i++)
+        for (int i = 0; i < t_num; i++)
         {
             direction = (Direction)(rand() % 4);
 
@@ -345,16 +448,8 @@ void Game::enemySpawning(int t_num)
                 break;
             }
 
-            if (t_num == MAX_ENEMIES)
-            {
-                enemies[i].spawn(start);
-                waveComplete = false;
-            }
-            else if (t_num < MAX_ENEMIES)
-            {
-                enemies[t_num].spawn(start);
-                waveComplete = false;
-            }
+            enemies[i].spawn(start);
+            waveComplete = false;
         }
     }
 }
@@ -365,7 +460,7 @@ void Game::waveSpawning()
 
     for (auto enemy : enemies)
     {
-        if (!enemy.isActive() && currentCell != CENTRE)
+        if (!enemy.isActive() && (currentCell != CENTRE || m_raid))
         {
             enemyKill++;
         }
@@ -373,8 +468,13 @@ void Game::waveSpawning()
 
     if (enemyKill == MAX_ENEMIES)
     {
-        supplySpawning(1);
+        if (currentCell != CENTRE)
+        {
+            supplySpawning(1);
+        }
         waveComplete = true;
+        raidStarting(false);
+        m_raid = false;
     }
 }
 
@@ -533,5 +633,78 @@ void Game::moveCell()
         }
     }
 
+}
+
+void Game::dayCycle(bool t_forcedChange) // If t_forcedChange -> true, force it to day, else function as normal
+{
+    float timeDivision;
+
+    if (time == DAYCYCLE::DAY)
+    {
+        timedt += GetFrameTime();
+        timeDivision = timedt / DAY_LENGTH;
+
+        if (timeDivision < 0.25)
+        {
+            m_timeText = "Early Morning";
+        }
+        else if (timeDivision >= 0.25 && timeDivision < 0.4)
+        {
+            m_timeText = "Morning";
+        }
+        else if (timeDivision >= 0.4 && timeDivision < 0.7)
+        {
+            m_timeText = "High Noon";
+        }
+        else if (timeDivision >= 0.7 && timeDivision < 1)
+        {
+            m_timeText = "Afternoon";
+        }
+        else if (timeDivision >= 1)
+        {
+            m_timeText = "Sunset";
+        }
+    }
+
+    if (timedt >= DAY_LENGTH && time == DAYCYCLE::DAY && !t_forcedChange && currentCell == CENTRE)
+    {
+        time = DAYCYCLE::NIGHT;
+        timedt = 0.0f;
+        m_timeText = "Night";
+
+        if (m_dayCount % RAID_DAY == 0)
+        {
+            m_raid = true;
+            enemySpawning(MAX_ENEMIES);
+            raidStarting(true);
+        }
+
+        return;
+    }
+
+    if (t_forcedChange && time == DAYCYCLE::NIGHT)
+    {
+        time = DAYCYCLE::DAY;
+        timedt = 0.0f;
+        m_dayCount++;
+    }
+}
+
+void Game::raidStarting(bool t_trigger)
+{
+    if (t_trigger)
+    {
+        for (auto& npc : village)
+        {
+            npc->exitPassive();
+        }
+    }
+    else
+    {
+        for (auto& npc : village)
+        {
+            npc->passive();
+        }
+    }
 }
 

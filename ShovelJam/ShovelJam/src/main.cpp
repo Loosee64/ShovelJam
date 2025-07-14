@@ -44,7 +44,6 @@ void GameLoop(void)
     BeginDrawing();
     game.update();
 
-    ClearBackground(BLACK);
     game.draw();
 
     EndDrawing();

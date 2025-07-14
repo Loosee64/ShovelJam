@@ -14,6 +14,8 @@
 #include <vector>
 #include <string>
 
+enum class DAYCYCLE {DAY, NIGHT};
+
 class Game
 {
 public:
@@ -25,6 +27,7 @@ public:
     void collisionCheck();
 
     void bunksInteract(Building& t_bunks);
+    void buildingInteract(Building& t_building);
 
     void enemySpawning(int t_num);
     void waveSpawning();
@@ -33,6 +36,9 @@ public:
 
     void findNPCTarget();
     void moveCell();
+
+    void dayCycle(bool t_forcedChange);
+    void raidStarting(bool t_trigger);
 
 private:
     static const int MAX_ENEMIES = 10;
@@ -49,6 +55,7 @@ private:
     bool canInteract;
     std::vector<std::shared_ptr<NPC>> party;
     std::vector<std::shared_ptr<NPC>> village;
+    std::vector < std::shared_ptr<NPC>> barracks;
     std::shared_ptr<NPC> m_fieldNPC;
     int m_numInVillage;
 
@@ -58,12 +65,19 @@ private:
     Vector2 m_targetsArray[MAX_ENEMIES];
     int m_numTargets;
 
-    int map[5]; ///    1
-                ///  2 3 4
-                ///    5
     Cell currentCell;
 
     float dt;
+    float timedt;
+    const float DAY_LENGTH = 60.0f;
+
+    DAYCYCLE time;
+    int m_dayCount;
+    std::string m_dayText;
+    std::string m_timeText;
+    const int RAID_DAY = 1;
+
+    bool m_raid;
 };
 
 #endif // GAME_H
