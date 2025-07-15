@@ -143,6 +143,7 @@
     <ClCompile Include="src\NPC.cpp" />
     <ClCompile Include="src\OffensiveBehaviour.cpp" />
     <ClCompile Include="src\Player.cpp" />
+    <ClCompile Include="src\SleepingBag.cpp" />
     <ClCompile Include="src\Supply.cpp" />
     <ClCompile Include="src\SupplyShed.cpp" />
   </ItemGroup>
@@ -161,6 +162,7 @@
     <ClInclude Include="include\NPCBehaviour.h" />
     <ClInclude Include="include\OffensiveBehaviour.h" />
     <ClInclude Include="include\Player.h" />
+    <ClInclude Include="include\SleepingBag.h" />
     <ClInclude Include="include\Supply.h" />
     <ClInclude Include="include\SupplyShed.h" />
   </ItemGroup>

@@ -24,6 +24,7 @@ public:
     void spawn(Vector2 t_start);
 
     bool isFollowing() { return m_following; }
+    bool isBuilding() { return m_building; }
 
     void findTarget(Vector2* t_targets, int t_maxTargets);
     void shoot(Vector2 t_target);
@@ -31,6 +32,9 @@ public:
     void passive();
     void resetTarget() { m_target = m_position; }
     void exitPassive();
+
+    void assignToBuilding(Vector2 t_pos);
+    void removeFromBuilding();
 
     void newArea(Cell t_direction, Vector2 t_start);
 
@@ -52,6 +56,7 @@ private:
     Vector2 m_newAreaTarget;
 
     bool m_following;
+    bool m_building;
     int m_activeBullet;
     float dt;
 

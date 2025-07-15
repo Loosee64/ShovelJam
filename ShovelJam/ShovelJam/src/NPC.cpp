@@ -1,7 +1,8 @@
 #include "NPC.h"
 
 NPC::NPC(std::string t_name, Vector2 t_pos, std::shared_ptr<NPCBehaviour> t_behaviour) : m_name(t_name), m_following(false), m_activeBullet(-1), dt(0), m_shootingCooldown(1.0f), m_maxHealth(3.0f), 
-												m_target({100000.0f, 100000.0f }), approachDistance(100.0f), behaviour(t_behaviour), areaTimer(-1.0f), areaTimerMax(0.5f)
+												m_target({100000.0f, 100000.0f }), approachDistance(100.0f), behaviour(t_behaviour), areaTimer(-1.0f), areaTimerMax(0.5f),
+												m_building(false)
 {
 	m_position = t_pos;;
 	init();
@@ -30,6 +31,18 @@ void NPC::movement()
 void NPC::update(Vector2 t_target)
 {
 	dt += GetFrameTime();
+
+	if (m_building)
+	{
+		follow(m_target);
+		movement();
+		if (m_position.x <= m_target.x + 50 && m_position.x >= m_target.x - 50 &&
+			m_position.y <= m_target.y + 50 && m_position.y >= m_target.y - 50)
+		{
+			m_active = false;
+		}
+		return;
+	}
 
 	if (areaTimer > -1.0f)
 	{
@@ -173,6 +186,20 @@ void NPC::passive()
 void NPC::exitPassive()
 {
 	behaviour->exitPassive(*this);
+}
+
+void NPC::assignToBuilding(Vector2 t_pos)
+{
+	m_building = true;
+	m_target = t_pos;
+	m_speed = MAX_SPEED;
+}
+
+void NPC::removeFromBuilding()
+{
+	m_active = true;
+	m_building = false;
+	m_target = behaviour->passive(*this);
 }
 
 void NPC::newArea(Cell t_direction, Vector2 t_start)

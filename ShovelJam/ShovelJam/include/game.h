@@ -10,6 +10,7 @@
 #include "Bunks.h"
 #include "Barracks.h"
 #include "SupplyShed.h"
+#include "SleepingBag.h"
 
 #include <vector>
 #include <string>
@@ -39,13 +40,18 @@ public:
 
     void dayCycle(bool t_forcedChange);
     void raidStarting(bool t_trigger);
+    void checkBuildingStatus();
+    void buildingProgress(Building& t_building);
+    void disableSleepingBag();
 
 private:
     static const int MAX_ENEMIES = 10;
     static const int MAX_NPCS = 50;
     static const int MAX_PARTY = 3;
     static const int MAX_SUPPLIES = 1;
-    static const int MAX_BUILDINGS = 1;
+    static const int MAX_BUILDINGS = 4;
+
+    int m_effectiveMaxBuildings = MAX_BUILDINGS;
 
     Player player;
     Enemy enemies[MAX_ENEMIES];
@@ -69,13 +75,13 @@ private:
 
     float dt;
     float timedt;
-    const float DAY_LENGTH = 60.0f;
+    const float DAY_LENGTH = 10.0f;
 
     DAYCYCLE time;
     int m_dayCount;
     std::string m_dayText;
     std::string m_timeText;
-    const int RAID_DAY = 1;
+    const int RAID_DAY = 7;
 
     bool m_raid;
 };

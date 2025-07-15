@@ -2,7 +2,7 @@
 
 void Barracks::assignValues()
 {
-	m_time = 1;
+	m_time = 3;
 	m_value = 50;
 	m_name = "Barracks";
 }

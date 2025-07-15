@@ -2,7 +2,7 @@
 
 void SupplyShed::assignValues()
 {
-	m_time = 1;
+	m_time = 2;
 	m_value = 20;
 	m_name = "Supply Shed";
 }

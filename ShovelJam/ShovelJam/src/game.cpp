@@ -23,6 +23,7 @@ void Game::init()
     buildings.push_back(std::make_shared<Building>(std::make_shared<SupplyShed>()));
     buildings.push_back(std::make_shared<Building>(std::make_shared<Bunks>()));
     buildings.push_back(std::make_shared<Building>(std::make_shared<Barracks>()));
+    buildings.push_back(std::make_shared<Building>(std::make_shared<SleepingBag>()));
 
     for (auto& npc : party)
     {
@@ -44,8 +45,17 @@ void Game::init()
     for (auto& building : buildings)
     {
         building->init();
+
+        if (building->getName() == "Sleeping Bag")
+        {
+            building->spawn({ 400.0f, 500.0f });
+            building->forceComplete();
+            building->disableText();
+            continue;
+        }
+
         building->spawn({ 200.0f + offset, 200.0f });
-        offset += 200.0f;
+        offset += 300.0f;
     }
 }
 
@@ -159,6 +169,8 @@ void Game::update()
 
     collisionCheck();
 
+    disableSleepingBag();
+
     if (IsKeyReleased(KEY_R)) { enemySpawning(MAX_ENEMIES); } // DEV KEY
     if (IsKeyReleased(KEY_T)) // DEV KEY
     {
@@ -185,7 +197,10 @@ void Game::update()
 
     for (auto& npc : party)
     {
-        npc->findTarget(m_targetsArray, m_numTargets);
+        if (!npc->isBuilding())
+        {
+            npc->findTarget(m_targetsArray, m_numTargets);
+        }
         npc->update(player.getPosition());
     }
 
@@ -198,13 +213,16 @@ void Game::update()
 
         for (auto& npc : village)
         {
-            if (!m_raid)
+            if (!m_raid && !npc->isBuilding())
             {
                 npc->passive();
             }
             else
             {
-                npc->findTarget(m_targetsArray, m_numTargets);
+                if (!npc->isBuilding())
+                {
+                    npc->findTarget(m_targetsArray, m_numTargets);
+                }
                 npc->update({ 0.0f, 0.0f });
             }
         }
@@ -307,16 +325,40 @@ void Game::collisionCheck()
             canInteract = false;
             if (CheckCollisionCircleRec(player.getPosition(), player.getRadius(), building->getBody()))
             {
-                buildingInteract(*building);
-                if (!building->completed())
+                if (!building->completed() && !building->inProcess())
                 {
                     building->build(player.currentSupply());
+                    player.subtractSupply(building->subractValue());
+                }
+                else if (building->inProcess())
+                {
+                    buildingProgress(*building);
                 }
                 else
                 {
                     building->interact(player.currentSupply());
                 }
-                player.subtractSupply(building->subractValue());
+                if (!building->inProcess())
+                {
+                    player.subtractSupply(building->subractValue());
+                }
+                buildingInteract(*building);
+            }
+        }
+    }
+
+    if (currentCell == CENTRE && IsKeyReleased(KEY_R))
+    {
+        for (auto& building : buildings)
+        {
+            canInteract = false;
+            if (CheckCollisionCircleRec(player.getPosition(), player.getRadius(), building->getBody()))
+            {
+                if (building->inProcess() && village.size() > 0)
+                {
+                    building->assignBuilder(village.back(), m_dayCount);
+                    village.back()->assignToBuilding(building->getPosition());
+                }
             }
         }
     }
@@ -326,7 +368,16 @@ void Game::bunksInteract(Building& t_bunks)
 {
     int limit = 0;
 
-    if (t_bunks.completed())
+    if (t_bunks.completed() && t_bunks.getName() == "Sleeping Bag")
+    {
+        if (time == DAYCYCLE::NIGHT)
+        {
+            dayCycle(true);
+        }
+        return;
+    }
+
+    if (t_bunks.completed() || t_bunks.inProcess())
     {
         if (time == DAYCYCLE::NIGHT)
         {
@@ -371,7 +422,7 @@ void Game::buildingInteract(Building& t_building)
 {
     std::vector<std::shared_ptr<NPC>> npcs;
 
-    if (t_building.getName() == "Bunks")
+    if (t_building.getName() == "Bunks" || t_building.getName() == "Sleeping Bag")
     {
         bunksInteract(t_building);
         return;
@@ -641,6 +692,11 @@ void Game::dayCycle(bool t_forcedChange) // If t_forcedChange -> true, force it 
 
     if (time == DAYCYCLE::DAY)
     {
+        if (timedt == 0)
+        {
+            checkBuildingStatus();
+        }
+
         timedt += GetFrameTime();
         timeDivision = timedt / DAY_LENGTH;
 
@@ -682,7 +738,7 @@ void Game::dayCycle(bool t_forcedChange) // If t_forcedChange -> true, force it 
         return;
     }
 
-    if (t_forcedChange && time == DAYCYCLE::NIGHT)
+    if (t_forcedChange && time == DAYCYCLE::NIGHT && !m_raid)
     {
         time = DAYCYCLE::DAY;
         timedt = 0.0f;
@@ -705,6 +761,61 @@ void Game::raidStarting(bool t_trigger)
         {
             npc->passive();
         }
+    }
+}
+
+void Game::checkBuildingStatus()
+{
+    for (auto& building : buildings)
+    {
+        if (!building->completed())
+        {
+            if (building->inProcess())
+            {
+                if (building->hasBuilder())
+                {
+                    building->applyProgress();
+                }
+                building->completeCheck(m_dayCount);
+            }
+        }
+    }
+}
+
+void Game::buildingProgress(Building& t_building)
+{
+    if (time == DAYCYCLE::DAY)
+    {
+        timedt = DAY_LENGTH;
+        t_building.applyProgress();
+    }
+    else
+    {
+        timedt = 0.0f;
+    }
+}
+
+void Game::disableSleepingBag()
+{
+    bool bunksOn = false;
+    bool bagOn = false;
+
+    for (int i = 0; i < m_effectiveMaxBuildings; i++)
+    {
+        if (buildings.at(i)->getName() == "Bunks" && buildings.at(i)->completed())
+        {
+            bunksOn = true;
+        }
+        if (buildings.at(i)->getName() == "Sleeping Bag")
+        {
+            bagOn = true;
+        }
+    }
+
+    if (bunksOn && bagOn)
+    {
+        buildings.pop_back();
+        m_effectiveMaxBuildings--;
     }
 }
 

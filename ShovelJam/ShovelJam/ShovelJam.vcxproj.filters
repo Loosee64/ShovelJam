@@ -78,6 +78,9 @@
     <ClCompile Include="src\Barracks.cpp">
       <Filter>Source Files\Building Types</Filter>
     </ClCompile>
+    <ClCompile Include="src\SleepingBag.cpp">
+      <Filter>Source Files\Building Types</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\game.h">
@@ -126,6 +129,9 @@
       <Filter>Header Files\Building Types</Filter>
     </ClInclude>
     <ClInclude Include="include\SupplyShed.h">
+      <Filter>Header Files\Building Types</Filter>
+    </ClInclude>
+    <ClInclude Include="include\SleepingBag.h">
       <Filter>Header Files\Building Types</Filter>
     </ClInclude>
   </ItemGroup>
