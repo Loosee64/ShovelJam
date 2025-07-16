@@ -30,8 +30,11 @@ public:
     void bunksInteract(Building& t_bunks);
     void buildingInteract(Building& t_building);
 
+    Vector2 findNearestTarget(Enemy& t_enemy, std::vector<std::shared_ptr<NPC>>& t_targets);
+
     void enemySpawning(int t_num);
     void waveSpawning();
+    void swarmSpawning();
     void supplySpawning(int t_amount);
     void fieldNPCSpawning();
 
@@ -39,6 +42,7 @@ public:
     void moveCell();
 
     void dayCycle(bool t_forcedChange);
+    void dailySupplies();
     void raidStarting(bool t_trigger);
     void checkBuildingStatus();
     void buildingProgress(Building& t_building);
@@ -75,13 +79,16 @@ private:
 
     float dt;
     float timedt;
-    const float DAY_LENGTH = 10.0f;
+    const float DAY_LENGTH = 60.0f;
 
     DAYCYCLE time;
     int m_dayCount;
     std::string m_dayText;
     std::string m_timeText;
     const int RAID_DAY = 7;
+
+    Rectangle m_swarmArea;
+    Cell swarmSpot;
 
     bool m_raid;
 };

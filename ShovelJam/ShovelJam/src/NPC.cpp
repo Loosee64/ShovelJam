@@ -1,10 +1,11 @@
 #include "NPC.h"
 
-NPC::NPC(std::string t_name, Vector2 t_pos, std::shared_ptr<NPCBehaviour> t_behaviour) : m_name(t_name), m_following(false), m_activeBullet(-1), dt(0), m_shootingCooldown(1.0f), m_maxHealth(3.0f), 
+NPC::NPC(std::string t_name, Vector2 t_pos, std::shared_ptr<NPCBehaviour> t_behaviour, int t_animation) : m_name(t_name), m_following(false), m_activeBullet(-1), dt(0), m_shootingCooldown(1.0f), m_maxHealth(3.0f),
 												m_target({100000.0f, 100000.0f }), approachDistance(100.0f), behaviour(t_behaviour), areaTimer(-1.0f), areaTimerMax(0.5f),
-												m_building(false)
+												m_building(false), iFrames(0)
 {
-	m_position = t_pos;;
+	m_position = t_pos;
+	m_baseRow = t_animation;
 	init();
 }
 
@@ -18,6 +19,9 @@ void NPC::init()
 	m_colour = SKYBLUE;
 	m_radius = 25.0f;
 	m_speed = MAX_SPEED;
+	m_texture = LoadTexture("ASSETS/Spritesheets/jimmyandnpcs.png");
+	m_frameRec = { 0, 0, 64, 64 };
+	m_destRec = { 0, 0, 128, 128 };
 	m_health = 5;
 	
 	m_active = true; // ---------- TEMP
@@ -31,6 +35,8 @@ void NPC::movement()
 void NPC::update(Vector2 t_target)
 {
 	dt += GetFrameTime();
+
+	m_animationdt += GetFrameTime();
 
 	if (m_building)
 	{
@@ -66,10 +72,16 @@ void NPC::update(Vector2 t_target)
 		approachTarget();
 	}
 
+	if (m_animationdt > 0.1f)
+	{
+		animate();
+		m_animationdt = 0.0f;
+	}
 	movement();
 
 	if (dt > m_shootingCooldown && m_target.x != 100000.0f)
 	{
+		std::cout << m_target.x << " " << m_target.y << "\n";
 		shoot(m_target);
 		dt = 0;
 	}
@@ -81,6 +93,8 @@ void NPC::update(Vector2 t_target)
 			bullet.update();
 		}
 	}
+
+	retreat();
 }
 
 void NPC::draw()
@@ -115,6 +129,39 @@ void NPC::spawn(Vector2 t_start)
 	m_active = true;
 }
 
+void NPC::damage()
+{
+	if (iFrames >= MAX_IFRAMES)
+	{
+		m_health--;
+		iFrames = 0;
+	}
+	std::cout << m_health << "\n";
+}
+
+void NPC::retreat()
+{
+	std::shared_ptr<NPCBehaviour> temp = behaviour;
+
+	if (behaviour != nullptr)
+	{
+		if (behaviour->behaviourType() == "Offensive")
+		{
+			if (m_health < 1)
+			{
+				behaviour = std::make_shared<DefensiveBehaviour>();
+			}
+			else
+			{
+				behaviour.reset();
+				behaviour = temp;
+			}
+		}
+	}
+
+	temp.reset();
+}
+
 void NPC::findTarget(Vector2* t_targets, int t_maxTargets)
 {
 	float nearestValue = 100000;
@@ -134,7 +181,14 @@ void NPC::findTarget(Vector2* t_targets, int t_maxTargets)
 				nearest = t_targets[i];
 			}
 		}
-		m_target = nearest;
+		if (t_maxTargets > 0)
+		{
+			m_target = nearest;
+		}
+		else
+		{
+			m_target.x = 100000.0f;
+		}
 	}
 }
 

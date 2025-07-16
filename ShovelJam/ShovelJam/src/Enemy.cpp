@@ -1,6 +1,6 @@
 #include "Enemy.h"
 
-Enemy::Enemy()
+Enemy::Enemy() : m_target({1000.0f, 1000.0f})
 {
 	init();
 }
@@ -15,7 +15,7 @@ void Enemy::init()
 	m_health = 2;
 }
 
-void Enemy::update(Vector2 t_target)
+void Enemy::update()
 {
 	if (m_active)
 	{
@@ -24,7 +24,7 @@ void Enemy::update(Vector2 t_target)
 			kill();
 		}
 
-		follow(t_target);
+		follow(m_target);
 		movement();
 	}
 }
@@ -53,10 +53,22 @@ void Enemy::spawn(Vector2 t_start)
 {
 	m_health = 2;
 	m_position = t_start;
+	m_target = { 100000.0f, 100000.0f };
 	GameObject::spawn();
 }
 
 void Enemy::recoil(float t_scale)
 {
 	m_position -= Vector2Scale(m_velocity, t_scale);
+}
+
+void Enemy::assignTarget(Vector2 t_target)
+{
+	float newDistance = Vector2Distance(t_target, m_position);
+	float oldDistance = Vector2Distance(m_target, m_position);
+
+	if (newDistance < oldDistance)
+	{
+		m_target = t_target;
+	}
 }

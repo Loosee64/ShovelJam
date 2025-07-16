@@ -1,8 +1,7 @@
 #include "Player.h"
 
-Player::Player() : activeBullet(-1), iFrames(0), dt(0), m_shootingCooldown(0.15f), supplyValue(100)
+Player::Player() : activeBullet(-1), iFrames(0), dt(0), m_shootingCooldown(0.15f), supplyValue(0)
 {
-	init();
 }
 
 void Player::init()
@@ -13,11 +12,19 @@ void Player::init()
 	m_radius = 25.0f;
 	m_speed = 5.0f;
 	m_health = 5;
+	m_texture = LoadTexture("ASSETS/Spritesheets/jimmyandnpcs.png");
+	m_frameRec = { 0, 0, 64, 64 };
+	m_destRec = { 0, 0, 128, 128 };
+	m_currentFrame = 0;
+	m_animationdt = 0;
+	m_baseRow = 0;
 }
 
 void Player::update()
 {
 	dt += GetFrameTime();
+
+	m_animationdt += GetFrameTime();
 
 	if (iFrames > 0)
 	{
@@ -30,6 +37,13 @@ void Player::update()
 	}
 
 	input();
+
+	if (m_animationdt >= 0.1)
+	{
+		animate();
+		m_animationdt = 0.0f;
+	}
+
 	movement();
 
 	for (Bullet& bullet : bullets)
@@ -71,11 +85,11 @@ void Player::draw()
 
 void Player::input()
 {
-	if (IsKeyDown(KEY_W)) { m_velocity.y = -m_speed; }
-	if (IsKeyDown(KEY_S)) { m_velocity.y = m_speed; }
-	if (IsKeyDown(KEY_A)) { m_velocity.x = -m_speed; }
-	if (IsKeyDown(KEY_D)) { m_velocity.x = m_speed; }
-	
+	if (IsKeyDown(KEY_W)) { m_velocity.y = -m_speed;}
+	if (IsKeyDown(KEY_S)) { m_velocity.y = m_speed;}
+	if (IsKeyDown(KEY_A)) { m_velocity.x = -m_speed;}
+	if (IsKeyDown(KEY_D)) { m_velocity.x = m_speed;}
+
 	if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && dt >= m_shootingCooldown) { shoot(); dt = 0; }
 }
 
@@ -99,5 +113,13 @@ void Player::resetBullet()
 	if (activeBullet > -1)
 	{
 		bullets[activeBullet].reset();
+	}
+}
+
+void Player::subtractSupply(int t_val)
+{
+	if (supplyValue > t_val)
+	{
+		supplyValue -= t_val;
 	}
 }

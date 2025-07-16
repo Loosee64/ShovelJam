@@ -12,7 +12,7 @@ class NPC :
     friend class DefensiveBehaviour;
 
 public:
-    NPC(std::string t_name, Vector2 t_pos, std::shared_ptr<NPCBehaviour> t_behaviour);
+    NPC(std::string t_name, Vector2 t_pos, std::shared_ptr<NPCBehaviour> t_behaviour, int t_animation);
     ~NPC();
     virtual void init() override;
     virtual void movement() override;
@@ -22,6 +22,9 @@ public:
     void startFollowing() { m_following = true; }
     void stopFollowing() { m_following = false; }
     void spawn(Vector2 t_start);
+
+    void damage();
+    void retreat();
 
     bool isFollowing() { return m_following; }
     bool isBuilding() { return m_building; }
@@ -54,6 +57,9 @@ private:
 
     Vector2 m_target;
     Vector2 m_newAreaTarget;
+
+    const int MAX_IFRAMES = 0.5f;
+    int iFrames;
 
     bool m_following;
     bool m_building;

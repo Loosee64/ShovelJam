@@ -1,6 +1,7 @@
 #pragma once
 #include "raylib.h"
 #include "raymath.h"
+#include <string>
 
 class NPC;
 
@@ -11,6 +12,7 @@ public:
 	virtual bool canApproach() = 0;
 	virtual Vector2 passive(NPC &t_npc) = 0;
 	virtual void exitPassive(NPC& t_npc) = 0;
+	virtual std::string behaviourType() { return "NULL"; };
 };
 
 #include "NPC.h"

@@ -11,15 +11,17 @@ public:
     virtual void movement() override;
     virtual void damage() override;
 
-    void update(Vector2 t_target);
+    void update();
     void draw();
 
     int getHealth() { return m_health; }
 
     void spawn(Vector2 t_start);
     void recoil(float t_scale);
+    void assignTarget(Vector2 t_target);
 
 private:
     Direction m_direction;
+    Vector2 m_target;
 };
 

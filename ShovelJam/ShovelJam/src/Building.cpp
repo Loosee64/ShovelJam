@@ -37,7 +37,7 @@ void Building::draw()
 	displayText = m_name + "\n";
 	if (m_textDisplay)
 	{
-		displayText = "Current Supplies: " + std::to_string(m_currentValue) + "\n" + "Needed Supplies: " + std::to_string(m_value) + "\n" + "Days to build: " + std::to_string(m_timeLeft);
+		displayText += "Current Supplies: " + std::to_string(m_currentValue) + "\n" + "Needed Supplies: " + std::to_string(m_value) + "\n" + "Days to build: " + std::to_string(m_timeLeft);
 		DrawText(displayText.c_str(), m_position.x - 30, m_position.y - 90, 20, m_colour);
 	}
 	else

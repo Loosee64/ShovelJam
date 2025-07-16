@@ -13,6 +13,7 @@ public:
     virtual void damage() override;
 
     void draw();
+
     void kill();
 
     void input();
@@ -27,7 +28,7 @@ public:
     void resetBullet();
 
     void addSupply(int t_val) { supplyValue += t_val; }
-    void subtractSupply(int t_val) { supplyValue -= t_val; }
+    void subtractSupply(int t_val);
     int currentSupply() { return supplyValue; }
 
 private:

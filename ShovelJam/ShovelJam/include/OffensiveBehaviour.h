@@ -10,6 +10,7 @@ public:
     virtual bool canApproach() override;
     virtual Vector2 passive(NPC& t_npc) override;
     virtual void exitPassive(NPC& t_npc) override;
+    virtual std::string behaviourType() { return "Offensive"; }
 private:
     float distance;
     const float MAX_DISTANCE = 100.0f;

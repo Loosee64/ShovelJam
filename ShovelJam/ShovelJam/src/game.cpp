@@ -14,7 +14,7 @@ void Game::init()
     village.reserve(MAX_NPCS);
 
     party.reserve(MAX_PARTY);
-    party.push_back(std::make_shared<NPC>(NPC("Barry", { 500.0f, 200.0f }, std::make_shared<OffensiveBehaviour>())));
+    party.push_back(std::make_shared<NPC>(NPC("Barry", { 500.0f, 200.0f }, std::make_shared<OffensiveBehaviour>(), 8)));
 
     supplies.reserve(MAX_SUPPLIES);
     supplies.push_back(std::make_shared<Supply>());
@@ -24,6 +24,8 @@ void Game::init()
     buildings.push_back(std::make_shared<Building>(std::make_shared<Bunks>()));
     buildings.push_back(std::make_shared<Building>(std::make_shared<Barracks>()));
     buildings.push_back(std::make_shared<Building>(std::make_shared<SleepingBag>()));
+
+    player.init();
 
     for (auto& npc : party)
     {
@@ -57,6 +59,13 @@ void Game::init()
         building->spawn({ 200.0f + offset, 200.0f });
         offset += 300.0f;
     }
+
+    m_swarmArea.width = 40.0f;
+    m_swarmArea.height = 40.0f;
+    m_swarmArea.x = 1000.0f;
+    m_swarmArea.y = 1000.0f;
+
+    swarmSpawning();
 }
 
 void Game::draw()
@@ -113,6 +122,8 @@ void Game::draw()
         }
     }
 
+    DrawRectangleRec(m_swarmArea, GREEN);
+
     std::string cellText;
     switch (currentCell)
     {
@@ -164,26 +175,32 @@ void Game::update()
 
     for (Enemy& enemy : enemies)
     {
-        enemy.update(player.getPosition());
+        enemy.assignTarget(findNearestTarget(enemy, party));
+        if (m_raid)
+        {
+            enemy.assignTarget(findNearestTarget(enemy, village));
+            enemy.assignTarget(findNearestTarget(enemy, barracks));
+        }
+        enemy.update();
     }
 
     collisionCheck();
 
     disableSleepingBag();
 
-    if (IsKeyReleased(KEY_R)) { enemySpawning(MAX_ENEMIES); } // DEV KEY
-    if (IsKeyReleased(KEY_T)) // DEV KEY
-    {
-        for (auto &enemy : enemies)
-        {
-            enemy.kill();
-        }
-    }
-    if (IsKeyReleased(KEY_UP)) { currentCell = CELLNORTH; } // DEV KEY
-    if (IsKeyReleased(KEY_DOWN)) { currentCell = CELLSOUTH; } // DEV KEY
-    if (IsKeyReleased(KEY_RIGHT)) { currentCell = CELLEAST; } // DEV KEY
-    if (IsKeyReleased(KEY_LEFT)) { currentCell = CELLWEST; } // DEV KEY
-    if (IsKeyReleased(KEY_SPACE)) { currentCell = CENTRE; } // DEV KEY
+    //if (IsKeyReleased(KEY_R)) { enemySpawning(MAX_ENEMIES); } // DEV KEY
+    //if (IsKeyReleased(KEY_T)) // DEV KEY
+    //{
+    //    for (auto &enemy : enemies)
+    //    {
+    //        enemy.kill();
+    //    }
+    //}
+    //if (IsKeyReleased(KEY_UP)) { currentCell = CELLNORTH; } // DEV KEY
+    //if (IsKeyReleased(KEY_DOWN)) { currentCell = CELLSOUTH; } // DEV KEY
+    //if (IsKeyReleased(KEY_RIGHT)) { currentCell = CELLEAST; } // DEV KEY
+    //if (IsKeyReleased(KEY_LEFT)) { currentCell = CELLWEST; } // DEV KEY
+    //if (IsKeyReleased(KEY_SPACE)) { currentCell = CENTRE; } // DEV KEY
 
     if (currentCell == CENTRE && !m_raid)
     {
@@ -279,6 +296,12 @@ void Game::collisionCheck()
                         enemy.damage();
                         npc->resetBullet();
                     }
+
+                    if (CheckCollisionCircles(npc->getPosition(), npc->getRadius(), enemy.getPosition(), enemy.getRadius()))
+                    {
+                        npc->damage();
+                        enemy.recoil(20.0f);
+                    }
                 }
             }
             if (m_raid)
@@ -291,6 +314,24 @@ void Game::collisionCheck()
                         {
                             enemy.damage();
                             npc->resetBullet();
+                        }
+
+                        if (CheckCollisionCircles(npc->getPosition(), npc->getRadius(), enemy.getPosition(), enemy.getRadius()))
+                        {
+                            npc->damage();
+                            enemy.recoil(20.0f);
+                        }
+                    }
+                }
+
+                for (auto& npc : village)
+                {
+                    if (npc->isActive())
+                    {
+                        if (CheckCollisionCircles(npc->getPosition(), npc->getRadius(), enemy.getPosition(), enemy.getRadius()))
+                        {
+                            npc->damage();
+                            enemy.recoil(20.0f);
                         }
                     }
                 }
@@ -377,7 +418,7 @@ void Game::bunksInteract(Building& t_bunks)
         return;
     }
 
-    if (t_bunks.completed() || t_bunks.inProcess())
+    if (t_bunks.completed())
     {
         if (time == DAYCYCLE::NIGHT)
         {
@@ -461,46 +502,72 @@ void Game::buildingInteract(Building& t_building)
     }
 }
 
+Vector2 Game::findNearestTarget(Enemy& t_enemy, std::vector<std::shared_ptr<NPC>>& t_targets)
+{
+    float distance = Vector2Distance(player.getPosition(), t_enemy.getPosition());
+    float tempDistance = 100000;
+    Vector2 nearest = player.getPosition();
+
+    for (auto& npc : t_targets)
+    {
+        if (npc->isActive())
+        {
+            tempDistance = Vector2Distance(npc->getPosition(), t_enemy.getPosition());
+
+            if (tempDistance < distance)
+            {
+                distance = tempDistance;
+                nearest = npc->getPosition();
+            }
+        }
+    }
+
+    return nearest;
+}
+
 void Game::enemySpawning(int t_num)
 {
-    if ((currentCell != CENTRE && time == DAYCYCLE::DAY) || (m_raid && currentCell == CENTRE))
+    if (currentCell == swarmSpot || m_raid)
     {
-        Vector2 start = { 0.0f, 0.0f };
-        Direction direction;
-
-        for (int i = 0; i < t_num; i++)
+        if ((currentCell != CENTRE && time == DAYCYCLE::DAY) || (m_raid && currentCell == CENTRE))
         {
-            direction = (Direction)(rand() % 4);
+            Vector2 start = { 0.0f, 0.0f };
+            Direction direction;
 
-            while (direction == (int)currentCell)
+            for (int i = 0; i < t_num; i++)
             {
                 direction = (Direction)(rand() % 4);
-            }
 
-            switch (direction)
-            {
-            case NORTH:
-                start.x = (rand() % (SCREEN_WIDTH - 50)) + 50;
-                start.y = 20;
-                break;
-            case SOUTH:
-                start.x = (rand() % (SCREEN_WIDTH - 50)) + 50;
-                start.y = SCREEN_HEIGHT + 20;
-                break;
-            case EAST:
-                start.x = SCREEN_WIDTH + 20;
-                start.y = (rand() % (SCREEN_HEIGHT - 50)) + 50;
-                break;
-            case WEST:
-                start.x = -20.0f;
-                start.y = (rand() % (SCREEN_HEIGHT - 50)) + 50;
-                break;
-            default:
-                break;
-            }
+                while (direction == (int)currentCell)
+                {
+                    direction = (Direction)(rand() % 4);
+                }
 
-            enemies[i].spawn(start);
-            waveComplete = false;
+                switch (direction)
+                {
+                case NORTH:
+                    start.x = (rand() % (SCREEN_WIDTH - 50)) + 50;
+                    start.y = 20;
+                    break;
+                case SOUTH:
+                    start.x = (rand() % (SCREEN_WIDTH - 50)) + 50;
+                    start.y = SCREEN_HEIGHT + 20;
+                    break;
+                case EAST:
+                    start.x = SCREEN_WIDTH + 20;
+                    start.y = (rand() % (SCREEN_HEIGHT - 50)) + 50;
+                    break;
+                case WEST:
+                    start.x = -20.0f;
+                    start.y = (rand() % (SCREEN_HEIGHT - 50)) + 50;
+                    break;
+                default:
+                    break;
+                }
+
+                enemies[i].spawn(start);
+                waveComplete = false;
+            }
         }
     }
 }
@@ -526,6 +593,34 @@ void Game::waveSpawning()
         waveComplete = true;
         raidStarting(false);
         m_raid = false;
+        swarmSpawning();
+    }
+}
+
+void Game::swarmSpawning()
+{
+    swarmSpot = (Cell)(rand() % 4);
+
+    switch (swarmSpot)
+    {
+    case CELLSOUTH:
+        m_swarmArea.x = 400.0f;
+        m_swarmArea.y = SCREEN_HEIGHT - 50.0f;
+        break;
+    case CELLNORTH:
+        m_swarmArea.x = 400.0f;
+        m_swarmArea.y = 50.0f;
+        break;
+    case CELLWEST:
+        m_swarmArea.x = 50.0f;
+        m_swarmArea.y = 300.0f;
+        break;
+    case CELLEAST:
+        m_swarmArea.x = SCREEN_WIDTH - 50.0f;
+        m_swarmArea.y = 300.0f;
+        break;
+    default:
+        break;
     }
 }
 
@@ -551,7 +646,7 @@ void Game::fieldNPCSpawning()
 
     if (randNum == 0)
     {
-        m_fieldNPC = std::make_shared<NPC>(NPC("Barry", { 500.0f, 200.0f }, std::make_shared<OffensiveBehaviour>()));
+        m_fieldNPC = std::make_shared<NPC>(NPC("Barry", { 500.0f, 200.0f }, std::make_shared<OffensiveBehaviour>(), 8));
     }
 }
 
@@ -695,6 +790,7 @@ void Game::dayCycle(bool t_forcedChange) // If t_forcedChange -> true, force it 
         if (timedt == 0)
         {
             checkBuildingStatus();
+            dailySupplies();
         }
 
         timedt += GetFrameTime();
@@ -744,6 +840,25 @@ void Game::dayCycle(bool t_forcedChange) // If t_forcedChange -> true, force it 
         timedt = 0.0f;
         m_dayCount++;
     }
+}
+
+void Game::dailySupplies()
+{
+    int suppliesUsed = 10;
+    suppliesUsed += 10 * party.size();
+    suppliesUsed += 10 * village.size();
+    suppliesUsed += 10 * barracks.size();
+
+    player.subtractSupply(suppliesUsed);
+
+    /*if (!buildings.at(0)->completed())
+    {
+        player.subtractSupply(suppliesUsed);
+    }
+    else
+    {
+
+    }*/
 }
 
 void Game::raidStarting(bool t_trigger)

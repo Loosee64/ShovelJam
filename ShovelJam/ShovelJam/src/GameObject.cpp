@@ -3,6 +3,44 @@
 void GameObject::draw()
 {
 	DrawCircleV(m_position, m_radius, m_colour);
+	if (m_texture.id != 0)
+	{
+		DrawTexturePro(m_texture, m_frameRec, { m_position.x, m_position.y, 128, 128 }, { 64, 64 }, 0.0f, WHITE);
+	}
+}
+
+void GameObject::animate()
+{
+	if (m_currentFrame <= 5)
+	{
+		m_currentFrame++;
+	}
+	else
+	{
+		m_currentFrame = 0;
+	}
+	m_frameRec.x = m_currentFrame * 64;
+	if (m_velocity.x == 0.0f && m_velocity.y == 0.0f)
+	{
+		swapAnimation(0);
+	}
+	else if (m_velocity.x > 0.0f || m_velocity.y > 0.0f)
+	{
+		swapAnimation(1);
+	}
+}
+
+void GameObject::swapAnimation(int t_type)
+{
+	if (t_type == 0) // Idle
+	{
+		m_animationRow = m_baseRow;
+	}
+	else
+	{
+		m_animationRow = m_baseRow + 1;
+	}
+	m_frameRec.y = (m_animationRow * 64) + 2.0f;
 }
 
 void GameObject::update()

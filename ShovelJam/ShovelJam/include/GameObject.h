@@ -16,6 +16,9 @@ public:
 	virtual bool isActive() { return m_active; }
 
 	void draw();
+	void animate();
+	void swapAnimation(int t_type);
+
 	void kill();
 	void spawn();
 
@@ -30,5 +33,15 @@ protected:
 	float m_speed;
 	int m_health;
 	bool m_active;
+
+	Texture2D m_texture;
+	Rectangle m_frameRec;
+	Rectangle m_destRec;
+	Vector2 m_spritePos;
+
+	int m_currentFrame;
+	int m_animationRow;
+	int m_baseRow;
+	float m_animationdt;
 };
 
