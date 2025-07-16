@@ -2,10 +2,13 @@
 
 void GameObject::draw()
 {
-	DrawCircleV(m_position, m_radius, m_colour);
+	if (m_devVisuals)
+	{
+		DrawCircleV(m_position, m_radius, m_colour);
+	}
 	if (m_texture.id != 0)
 	{
-		DrawTexturePro(m_texture, m_frameRec, { m_position.x, m_position.y, 128, 128 }, { 64, 64 }, 0.0f, WHITE);
+		DrawTexturePro(m_texture, m_frameRec, { m_position.x, m_position.y, m_spriteSize, m_spriteSize }, { m_spriteSize / 2, m_spriteSize / 2 }, 0.0f, WHITE);
 	}
 }
 
@@ -40,7 +43,7 @@ void GameObject::swapAnimation(int t_type)
 	{
 		m_animationRow = m_baseRow + 1;
 	}
-	m_frameRec.y = (m_animationRow * 64) + 2.0f;
+	m_frameRec.y = (m_animationRow * 64);
 }
 
 void GameObject::update()

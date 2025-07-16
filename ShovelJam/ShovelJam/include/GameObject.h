@@ -34,10 +34,13 @@ protected:
 	int m_health;
 	bool m_active;
 
+	bool m_devVisuals;
+
 	Texture2D m_texture;
 	Rectangle m_frameRec;
 	Rectangle m_destRec;
 	Vector2 m_spritePos;
+	float m_spriteSize;
 
 	int m_currentFrame;
 	int m_animationRow;

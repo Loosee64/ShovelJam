@@ -10,6 +10,15 @@ void Supply::init()
 	m_colour = BROWN;
 	m_radius = 25.0f;
 	m_active = false;
+	m_devVisuals = true;
+
+	m_texture = LoadTexture("ASSETS/Spritesheets/supply.png");
+	m_frameRec = { 0, 0, 64, 64 };
+	m_destRec = { 0, 0, 128, 128 };
+	m_currentFrame = 0;
+	m_animationdt = 0;
+	m_baseRow = 0;
+	m_spriteSize = 64;
 }
 
 void Supply::draw()

@@ -18,6 +18,13 @@ void Player::init()
 	m_currentFrame = 0;
 	m_animationdt = 0;
 	m_baseRow = 0;
+	m_devVisuals = false;
+	m_spriteSize = 128;
+
+	for (auto& bullet : bullets)
+	{
+		bullet.init();
+	}
 }
 
 void Player::update()

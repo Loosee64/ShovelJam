@@ -9,23 +9,30 @@ Game::Game() : m_numTargets(0), currentCell(CENTRE), dt(0), wavedt(0), enemyKill
 
 void Game::init()
 {
+    m_ground = LoadTexture("ASSETS/Spritesheets/ground_spritesheet.png");
+
     enemySpawning(MAX_ENEMIES);
 
     village.reserve(MAX_NPCS);
 
     party.reserve(MAX_PARTY);
-    party.push_back(std::make_shared<NPC>(NPC("Barry", { 500.0f, 200.0f }, std::make_shared<OffensiveBehaviour>(), 8)));
-
+    party.push_back(std::make_shared<NPC>(NPC("Barry", { 500.0f, 400.0f }, std::make_shared<OffensiveBehaviour>(), 8)));
+    
     supplies.reserve(MAX_SUPPLIES);
     supplies.push_back(std::make_shared<Supply>());
 
     buildings.reserve(MAX_BUILDINGS);
-    buildings.push_back(std::make_shared<Building>(std::make_shared<SupplyShed>()));
-    buildings.push_back(std::make_shared<Building>(std::make_shared<Bunks>()));
-    buildings.push_back(std::make_shared<Building>(std::make_shared<Barracks>()));
-    buildings.push_back(std::make_shared<Building>(std::make_shared<SleepingBag>()));
+    buildings.push_back(std::make_shared<Building>(std::make_shared<SupplyShed>(), 2));
+    buildings.push_back(std::make_shared<Building>(std::make_shared<Bunks>(), 1));
+    buildings.push_back(std::make_shared<Building>(std::make_shared<Barracks>(), 0));
+    buildings.push_back(std::make_shared<Building>(std::make_shared<SleepingBag>(), 0));
 
     player.init();
+
+    for (auto& enemy : enemies)
+    {
+        enemy.init();
+    }
 
     for (auto& npc : party)
     {
@@ -73,10 +80,12 @@ void Game::draw()
     if (time == DAYCYCLE::DAY)
     {
         ClearBackground(ORANGE);
+        DrawTexturePro(m_ground, {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT}, {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT}, {0,0}, 0.0f, WHITE);
     }
     else if (time == DAYCYCLE::NIGHT)
     {
         ClearBackground(BLACK);
+        DrawTexturePro(m_ground, { 0, SCREEN_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT }, { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT }, { 0,0 }, 0.0f, WHITE);
     }
 
     DrawFPS(0, 0);

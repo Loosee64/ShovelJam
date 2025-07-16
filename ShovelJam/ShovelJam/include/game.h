@@ -91,6 +91,8 @@ private:
     Cell swarmSpot;
 
     bool m_raid;
+
+    Texture2D m_ground;
 };
 
 #endif // GAME_H

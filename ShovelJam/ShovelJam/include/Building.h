@@ -15,7 +15,7 @@ public:
     friend class Barracks;
     friend class Bunks;
 
-    Building(std::shared_ptr<BuildingType> t_type);
+    Building(std::shared_ptr<BuildingType> t_type, int t_sprite);
     virtual void init() override;
     virtual void update() override;
 
@@ -51,6 +51,8 @@ private:
     bool m_inProcess;
     bool m_isComplete;
     bool m_textDisplay;
+
+    int m_sprite;
 
     std::string m_name;
     int m_time;

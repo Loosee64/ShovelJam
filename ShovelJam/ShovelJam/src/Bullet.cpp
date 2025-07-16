@@ -2,7 +2,6 @@
 
 Bullet::Bullet()
 {
-	init();
 }
 
 void Bullet::init()
@@ -13,6 +12,15 @@ void Bullet::init()
 	m_radius = 10.0f;
 	m_speed = 20.0f;
 	m_active = false;
+	m_devVisuals = true;
+
+	m_texture = LoadTexture("ASSETS/Spritesheets/bullet.png");
+	m_frameRec = { 0, 0, 64, 64 };
+	m_destRec = { 0, 0, 1, 32 };
+	m_currentFrame = 0;
+	m_animationdt = 0;
+	m_baseRow = 0;
+	m_spriteSize = 32;
 }
 
 void Bullet::update()
@@ -32,7 +40,8 @@ void Bullet::draw()
 {
 	if (m_active)
 	{
-		GameObject::draw();
+		DrawTexturePro(m_texture, m_frameRec, { m_position.x, m_position.y, 20, 20 }, { 32, 32 }, 0.0f, WHITE);
+		//GameObject::draw();
 	}
 }
 

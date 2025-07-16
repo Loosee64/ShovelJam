@@ -1,6 +1,6 @@
 #include "Building.h"
 
-Building::Building(std::shared_ptr<BuildingType> t_type) : m_currentValue(0), m_remainder(0), displayText(""), m_height(0), m_width(0), m_isComplete(false),
+Building::Building(std::shared_ptr<BuildingType> t_type, int t_sprite) : m_sprite(t_sprite), m_currentValue(0), m_remainder(0), displayText(""), m_height(0), m_width(0), m_isComplete(false),
 															m_type(t_type), m_subtract(0), m_inProcess(false), m_timeStarted(0), m_timeLeft(m_time), m_textDisplay(true)
 {
 }
@@ -16,11 +16,19 @@ void Building::init()
 	m_time = m_type->getTime();
 	m_value = m_type->getValue();
 	m_name = m_type->getName();
+
+	m_texture = LoadTexture("ASSETS/Spritesheets/buildings_spritesheet.png");
+	m_frameRec = { 0, 0, 128, 128 };
+	m_frameRec.y = m_sprite * 128;
+	m_destRec = { 0, 0, 128, 128 };
+	m_animationdt = 0;
+	m_baseRow = 0;
 	
 	m_timeLeft = m_time;
 	m_body = Rectangle();
 
 	m_active = true; // -------------------- TEMP
+	m_devVisuals = true;
 }
 
 void Building::update()
@@ -33,6 +41,7 @@ void Building::update()
 
 void Building::draw()
 {
+	DrawTexturePro(m_texture, m_frameRec, { m_position.x, m_position.y, 192, 192 }, { 64, 128 }, 0.0f, WHITE);
 	DrawRectangleRec(m_body, m_colour);
 	displayText = m_name + "\n";
 	if (m_textDisplay)

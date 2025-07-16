@@ -25,6 +25,13 @@ void NPC::init()
 	m_health = 5;
 	
 	m_active = true; // ---------- TEMP
+	m_devVisuals = false;
+	m_spriteSize = 128;
+
+	for (auto& bullet : bullets)
+	{
+		bullet.init();
+	}
 }
 
 void NPC::movement()
