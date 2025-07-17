@@ -37,16 +37,44 @@ void Building::update()
 	{
 		m_colour = RED;
 	}
+	else if (!m_isComplete && !m_inProcess)
+	{
+		m_colour = BLUE;
+	}
+}
+
+void Building::reset()
+{
+	m_timeLeft = m_time;
+	m_currentValue = 0;
+	m_inProcess = false;
+	m_isComplete = false;
+	m_remainder = 0;
+	m_subtract = 0;
 }
 
 void Building::draw()
 {
-	DrawTexturePro(m_texture, m_frameRec, { m_position.x, m_position.y, 192, 192 }, { 64, 128 }, 0.0f, WHITE);
-	DrawRectangleRec(m_body, m_colour);
+	if (completed())
+	{
+		DrawTexturePro(m_texture, m_frameRec, { m_position.x, m_position.y, 192, 192 }, { 64, 128 }, 0.0f, WHITE);
+	}
+	else
+	{
+		DrawRectangleRec(m_body, m_colour);
+	}
+
 	displayText = m_name + "\n";
 	if (m_textDisplay)
 	{
-		displayText += "Current Supplies: " + std::to_string(m_currentValue) + "\n" + "Needed Supplies: " + std::to_string(m_value) + "\n" + "Days to build: " + std::to_string(m_timeLeft);
+		if (m_name == "Supply Shed" || !m_isComplete)
+		{
+			displayText += "Current Supplies: " + std::to_string(m_currentValue) + "\n";
+		}
+		if (!completed())
+		{
+			displayText += "Needed Supplies: " + std::to_string(m_value) + "\n" + "Days to build: " + std::to_string(m_timeLeft);
+		}
 		DrawText(displayText.c_str(), m_position.x - 30, m_position.y - 90, 20, m_colour);
 	}
 	else
@@ -81,8 +109,13 @@ void Building::build(int t_valueApplied)
 			}
 			if (m_currentValue == m_value)
 			{
+				m_subtract = m_currentValue;
 				m_inProcess = true;
 				m_colour = BROWN;
+			}
+			if (m_value > t_valueApplied)
+			{
+				m_subtract = t_valueApplied;
 			}
 		}
 	}
@@ -113,13 +146,6 @@ void Building::applyProgress()
 
 void Building::completeCheck(int t_time)
 {
-	if (m_timeStarted == 0)
-	{
-		m_timeStarted = t_time;
-		m_timeLeft = m_time;
-		return;
-	}
-
 	if (m_timeLeft <= 0)
 	{
 		m_timeStarted = 0;

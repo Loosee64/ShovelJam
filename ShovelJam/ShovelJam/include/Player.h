@@ -12,6 +12,8 @@ public:
     virtual void movement() override;
     virtual void damage() override;
 
+    void reset();
+
     void draw();
 
     void kill();
@@ -21,6 +23,9 @@ public:
 
     void setPositionX(float t_x) { m_position.x = t_x; }
     void setPositionY(float t_y) { m_position.y = t_y; }
+
+    bool isAlive();
+    int getHealth() { return m_health; }
 
     int getActiveBullet() { return activeBullet; }
     Vector2 getBulletPos() { return bullets[activeBullet].getPosition(); }
@@ -33,6 +38,7 @@ public:
 
 private:
     static const int MAX_BULLETS = 10;
+    const int MAX_HEALTH = 5;
     const int MAX_IFRAMES = 0.5f;
     Bullet bullets[MAX_BULLETS];
     int activeBullet;

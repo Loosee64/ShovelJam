@@ -21,12 +21,14 @@ void NPC::init()
 	m_speed = MAX_SPEED;
 	m_texture = LoadTexture("ASSETS/Spritesheets/jimmyandnpcs.png");
 	m_frameRec = { 0, 0, 64, 64 };
+	m_frameRec.y = m_baseRow * 64;
 	m_destRec = { 0, 0, 128, 128 };
 	m_health = 5;
 	
 	m_active = true; // ---------- TEMP
 	m_devVisuals = false;
 	m_spriteSize = 128;
+	m_currentFrame = 0;
 
 	for (auto& bullet : bullets)
 	{
@@ -240,6 +242,14 @@ void NPC::passive()
 	{
 		m_target = behaviour->passive(*this);
 	}
+	m_animationdt += GetFrameTime();
+
+	if (m_animationdt > 0.2f)
+	{
+		animate();
+		m_animationdt = 0.0f;
+	}
+
 	follow(m_target);
 	movement();
 }

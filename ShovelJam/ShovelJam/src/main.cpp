@@ -30,6 +30,11 @@ int main(void)
     {
         // Call GameLoop
         GameLoop();
+
+        if (exitWindow)
+        {
+            break;
+        }
     }
 #endif
 

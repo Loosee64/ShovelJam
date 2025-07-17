@@ -1,17 +1,17 @@
 #include "Player.h"
 
-Player::Player() : activeBullet(-1), iFrames(0), dt(0), m_shootingCooldown(0.15f), supplyValue(0)
+Player::Player() : activeBullet(-1), iFrames(0), dt(0), m_shootingCooldown(0.15f), supplyValue(10)
 {
 }
 
 void Player::init()
 {
-	m_position = { 50.0f, 100.0f };
+	m_position = { 300.0f, 500.0f };
 	m_velocity = { 0.0f, 0.0f };
 	m_colour = YELLOW;
 	m_radius = 25.0f;
 	m_speed = 5.0f;
-	m_health = 5;
+	m_health = MAX_HEALTH;
 	m_texture = LoadTexture("ASSETS/Spritesheets/jimmyandnpcs.png");
 	m_frameRec = { 0, 0, 64, 64 };
 	m_destRec = { 0, 0, 128, 128 };
@@ -81,6 +81,15 @@ void Player::damage()
 	std::cout << m_health << "\n";
 }
 
+void Player::reset()
+{
+	m_health = MAX_HEALTH;
+	m_currentFrame = 0;
+	m_animationdt = 0;
+	m_position = { 300.0f, 500.0f };
+	supplyValue = 0;
+}
+
 void Player::draw()
 {
 	GameObject::draw();
@@ -115,6 +124,15 @@ void Player::shoot()
 	bullets[activeBullet].fire(m_position, mousePos);
 }
 
+bool Player::isAlive()
+{
+	if (m_health <= 0)
+	{
+		return false;
+	}
+	return true;
+}
+
 void Player::resetBullet()
 {
 	if (activeBullet > -1)
@@ -125,7 +143,7 @@ void Player::resetBullet()
 
 void Player::subtractSupply(int t_val)
 {
-	if (supplyValue > t_val)
+	if (supplyValue >= t_val)
 	{
 		supplyValue -= t_val;
 	}

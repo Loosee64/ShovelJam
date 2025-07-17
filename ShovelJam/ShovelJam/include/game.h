@@ -7,6 +7,8 @@
 #include "Supply.h"
 #include "Building.h"
 
+#include "Button.h"
+
 #include "Bunks.h"
 #include "Barracks.h"
 #include "SupplyShed.h"
@@ -16,14 +18,33 @@
 #include <string>
 
 enum class DAYCYCLE {DAY, NIGHT};
+enum class GameState {TITLE, CREDITS, GAMEPLAY, GAMEOVER, ENDOFDAY};
 
 class Game
 {
 public:
     Game();
     void init();
+    void reset();
     void draw();
     void update();
+
+    void titleUpdate();
+    void titleDraw();
+
+    void creditsDraw();
+    void creditsUpdate();
+
+    void gameplayUpdate();
+    void gameplayDraw();
+
+    void gameOverDraw();
+    void gameOverUpdate();
+
+    void endOfDayDraw();
+    void endOfDayUpdate();
+
+    void screenScrolling();
 
     void collisionCheck();
 
@@ -49,6 +70,16 @@ public:
     void disableSleepingBag();
 
 private:
+    GameState m_gameState;
+    Vector2 m_scrolling1;
+    Vector2 m_scrolling2;
+
+    std::vector<std::shared_ptr<Button>> buttons;
+
+    int m_dailySuppliesGained;
+    int m_dailySuppliesConsumed;
+    int m_dailyVillagers;
+
     static const int MAX_ENEMIES = 10;
     static const int MAX_NPCS = 50;
     static const int MAX_PARTY = 3;
@@ -76,6 +107,9 @@ private:
     int m_numTargets;
 
     Cell currentCell;
+
+    Rectangle m_healthBar;
+    Rectangle m_healthOutline;
 
     float dt;
     float timedt;

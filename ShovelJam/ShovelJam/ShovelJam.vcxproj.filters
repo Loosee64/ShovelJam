@@ -81,6 +81,9 @@
     <ClCompile Include="src\SleepingBag.cpp">
       <Filter>Source Files\Building Types</Filter>
     </ClCompile>
+    <ClCompile Include="src\Button.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\game.h">
@@ -133,6 +136,9 @@
     </ClInclude>
     <ClInclude Include="include\SleepingBag.h">
       <Filter>Header Files\Building Types</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Button.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

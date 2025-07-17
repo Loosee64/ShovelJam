@@ -3,20 +3,26 @@
 #include "../include/game.h"
 
 Game::Game() : m_numTargets(0), currentCell(CENTRE), dt(0), wavedt(0), enemyKill(0), waveComplete(false), m_numInVillage(0), canInteract(true), time(DAYCYCLE::DAY),
-                timedt(0.0f), m_dayCount(1), m_dayText(""), m_raid(false), m_timeText("")
+                timedt(0.0f), m_dayCount(1), m_dayText(""), m_raid(false), m_timeText(""), m_gameState(GameState::TITLE), m_dailySuppliesGained(0), m_dailySuppliesConsumed(0),
+                m_dailyVillagers(0)
 {
 }
 
 void Game::init()
 {
     m_ground = LoadTexture("ASSETS/Spritesheets/ground_spritesheet.png");
+    m_scrolling1 = { -SCREEN_WIDTH, 0 };
+    m_scrolling2 = { 0, 0 };
+
+    buttons.push_back(std::make_shared<Button>(Button("Play", 300.0f)));
+    buttons.push_back(std::make_shared<Button>(Button("Credits", 400.0f)));
 
     enemySpawning(MAX_ENEMIES);
 
     village.reserve(MAX_NPCS);
 
     party.reserve(MAX_PARTY);
-    party.push_back(std::make_shared<NPC>(NPC("Barry", { 500.0f, 400.0f }, std::make_shared<OffensiveBehaviour>(), 8)));
+    village.push_back(std::make_shared<NPC>(NPC("Barry", { 500.0f, 400.0f }, std::make_shared<OffensiveBehaviour>(), 8)));
     
     supplies.reserve(MAX_SUPPLIES);
     supplies.push_back(std::make_shared<Supply>());
@@ -72,103 +78,188 @@ void Game::init()
     m_swarmArea.x = 1000.0f;
     m_swarmArea.y = 1000.0f;
 
+    m_healthBar = { 15, 20, 150, 20 };
+    m_healthOutline = { 10, 15, 160, 30 };
+
+    swarmSpawning();
+}
+
+void Game::reset()
+{
+    currentCell = CENTRE;
+
+    m_dayCount = 1;
+    m_raid = false;
+    timedt = 0.0f;
+    time = DAYCYCLE::DAY;
+    dt = 0;
+    wavedt = 0;
+    m_numInVillage = 0;
+    enemyKill = 0;
+
+    player.reset();
+    village.clear();
+    party.clear();
+    barracks.clear();
+
+    buildings.push_back(std::make_shared<Building>(std::make_shared<SleepingBag>(), 0));
+    buildings.back()->init();
+    m_effectiveMaxBuildings++;
+
+    for (auto& building : buildings)
+    {
+        if (building->getName() == "Sleeping Bag")
+        {
+            building->spawn({ 400.0f, 500.0f });
+            building->forceComplete();
+            building->disableText();
+            continue;
+        }
+
+        building->reset();
+    }
+
     swarmSpawning();
 }
 
 void Game::draw()
 {
-    if (time == DAYCYCLE::DAY)
-    {
-        ClearBackground(ORANGE);
-        DrawTexturePro(m_ground, {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT}, {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT}, {0,0}, 0.0f, WHITE);
-    }
-    else if (time == DAYCYCLE::NIGHT)
-    {
-        ClearBackground(BLACK);
-        DrawTexturePro(m_ground, { 0, SCREEN_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT }, { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT }, { 0,0 }, 0.0f, WHITE);
-    }
+    ClearBackground(BLACK);
 
-    DrawFPS(0, 0);
-    player.draw();
-    for (Enemy& enemy : enemies)
+    switch (m_gameState)
     {
-        enemy.draw();
-    }
-    for (auto &npc : party)
-    {
-        npc->draw();
-    }
-    for (auto& supply : supplies)
-    {
-        supply->draw();
-    }
-
-    if (currentCell == CENTRE)
-    {
-        for (auto& building : buildings)
-        {
-            building->draw();
-        }
-
-        for (auto& npc : village)
-        {
-            npc->draw();
-        }
-
-        if (m_raid)
-        {
-            for (auto& npc : barracks)
-            {
-                npc->draw();
-            }
-        }
-    }
-    else
-    {
-        if (m_fieldNPC.use_count() > 0)
-        {
-            m_fieldNPC->draw();
-        }
-    }
-
-    DrawRectangleRec(m_swarmArea, GREEN);
-
-    std::string cellText;
-    switch (currentCell)
-    {
-    case CELLNORTH:
-        cellText = "NORTH";
+    case GameState::TITLE:
+        titleDraw();
         break;
-    case CELLSOUTH:
-        cellText = "SOUTH";
+    case GameState::CREDITS:
+        creditsDraw();
         break;
-    case CELLEAST:
-        cellText = "EAST";
+    case GameState::GAMEPLAY:
+        gameplayDraw();
         break;
-    case CELLWEST:
-        cellText = "WEST";
+    case GameState::GAMEOVER:
+        gameOverDraw();
         break;
-    case CENTRE:
-        cellText = "CENTRE";
+    case GameState::ENDOFDAY:
+        endOfDayDraw();
         break;
     default:
         break;
     }
-
-    DrawText(cellText.c_str(), 500, 10, 30, WHITE);
-
-    std::string supplyText;
-    supplyText = "Supplies: " + std::to_string(player.currentSupply());
-    DrawText(supplyText.c_str(), 10, 50, 20, WHITE);
-
-    m_dayText = "Day: " + std::to_string(m_dayCount);
-    DrawText(m_dayText.c_str(), 10, 70, 20, WHITE);
-
-    DrawText(m_timeText.c_str(), 10, 90, 20, WHITE);
 }
 
 void Game::update()
 {
+    if (IsKeyReleased(KEY_F1)) { m_gameState = GameState::TITLE; }
+    if (IsKeyReleased(KEY_F2)) { m_gameState = GameState::CREDITS; }
+    if (IsKeyReleased(KEY_F3)) { m_gameState = GameState::GAMEPLAY; }
+    if (IsKeyReleased(KEY_F4)) { m_gameState = GameState::GAMEOVER; }
+    if (IsKeyReleased(KEY_F5)) { m_gameState = GameState::ENDOFDAY; }
+
+    switch (m_gameState)
+    {
+    case GameState::TITLE:
+        buttons.at(0)->setValues("Play", 300.0f);
+        buttons.at(1)->setValues("Credits", 400.0f);
+        titleUpdate();
+        break;
+    case GameState::CREDITS:
+        buttons.at(0)->setValues("Done", 600.0f);
+        buttons.at(1)->setValues("", 10000.0f);
+        creditsUpdate();
+        break;
+    case GameState::GAMEPLAY:
+        gameplayUpdate();
+        break;
+    case GameState::GAMEOVER:
+        buttons.at(0)->setValues("Try Again", 400.0f);
+        buttons.at(1)->setValues("", 10000.0f);
+        gameOverUpdate();
+        break;
+    case GameState::ENDOFDAY:
+        buttons.at(0)->setValues("Done", 600.0f);
+        buttons.at(1)->setValues("", 10000.0f);
+        endOfDayUpdate();
+        break;
+    default:
+        break;
+    }
+}
+
+void Game::titleUpdate()
+{
+    screenScrolling();
+    for (auto& button : buttons)
+    {
+        if (button->checkCollision(GetMousePosition()) && IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
+        {
+            if (button->getTitle() == "Play")
+            {
+                m_gameState = GameState::GAMEPLAY;
+            }
+            else if (button->getTitle() == "Credits")
+            {
+                m_gameState = GameState::CREDITS;
+            }
+        }
+    }
+}
+
+void Game::titleDraw()
+{
+    DrawTexturePro(m_ground, { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT }, { m_scrolling1.x, m_scrolling1.y, SCREEN_WIDTH, SCREEN_HEIGHT }, { 0,0 }, 0.0f, WHITE);
+    DrawTexturePro(m_ground, { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT }, { m_scrolling2.x, m_scrolling2.y, SCREEN_WIDTH, SCREEN_HEIGHT }, { 0,0 }, 0.0f, WHITE);
+
+    for (auto& button : buttons)
+    {
+        button->draw();
+    }
+
+    std::string titleText = "title";
+    DrawText(titleText.c_str(), 0, 0, 40, WHITE);
+}
+
+void Game::creditsDraw()
+{
+    DrawTexturePro(m_ground, { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT }, { m_scrolling1.x, m_scrolling1.y, SCREEN_WIDTH, SCREEN_HEIGHT }, { 0,0 }, 0.0f, WHITE);
+    DrawTexturePro(m_ground, { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT }, { m_scrolling2.x, m_scrolling2.y, SCREEN_WIDTH, SCREEN_HEIGHT }, { 0,0 }, 0.0f, WHITE);
+
+    for (auto& button : buttons)
+    {
+        button->draw();
+    }
+
+    std::string titleText = "credits";
+    DrawText(titleText.c_str(), 0, 0, 40, WHITE);
+}
+
+void Game::creditsUpdate()
+{
+    screenScrolling();
+
+    for (auto& button : buttons)
+    {
+        if (button->checkCollision(GetMousePosition()) && IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
+        {
+            if (button->getTitle() == "Done")
+            {
+                m_gameState = GameState::TITLE;
+            }
+        }
+    }
+}
+
+void Game::gameplayUpdate()
+{
+    if (!player.isAlive())
+    {
+        m_gameState = GameState::GAMEOVER;
+    }
+    else
+    {
+        m_healthBar.width = (player.getHealth() / 5.0f) * 150.0f;
+    }
+
     dt += GetFrameTime();
 
     dayCycle(false);
@@ -197,19 +288,19 @@ void Game::update()
 
     disableSleepingBag();
 
-    //if (IsKeyReleased(KEY_R)) { enemySpawning(MAX_ENEMIES); } // DEV KEY
-    //if (IsKeyReleased(KEY_T)) // DEV KEY
-    //{
-    //    for (auto &enemy : enemies)
-    //    {
-    //        enemy.kill();
-    //    }
-    //}
-    //if (IsKeyReleased(KEY_UP)) { currentCell = CELLNORTH; } // DEV KEY
-    //if (IsKeyReleased(KEY_DOWN)) { currentCell = CELLSOUTH; } // DEV KEY
-    //if (IsKeyReleased(KEY_RIGHT)) { currentCell = CELLEAST; } // DEV KEY
-    //if (IsKeyReleased(KEY_LEFT)) { currentCell = CELLWEST; } // DEV KEY
-    //if (IsKeyReleased(KEY_SPACE)) { currentCell = CENTRE; } // DEV KEY
+    if (IsKeyReleased(KEY_R)) { enemySpawning(MAX_ENEMIES); } // DEV KEY
+    if (IsKeyReleased(KEY_T)) // DEV KEY
+    {
+        for (auto& enemy : enemies)
+        {
+            enemy.kill();
+        }
+    }
+    if (IsKeyReleased(KEY_UP)) { currentCell = CELLNORTH; } // DEV KEY
+    if (IsKeyReleased(KEY_DOWN)) { currentCell = CELLSOUTH; } // DEV KEY
+    if (IsKeyReleased(KEY_RIGHT)) { currentCell = CELLEAST; } // DEV KEY
+    if (IsKeyReleased(KEY_LEFT)) { currentCell = CELLWEST; } // DEV KEY
+    if (IsKeyReleased(KEY_SPACE)) { currentCell = CENTRE; } // DEV KEY
 
     if (currentCell == CENTRE && !m_raid)
     {
@@ -273,6 +364,186 @@ void Game::update()
     if (!waveComplete)
     {
         waveSpawning();
+    }
+}
+
+void Game::gameplayDraw()
+{
+    if (time == DAYCYCLE::DAY)
+    {
+        DrawTexturePro(m_ground, { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT }, { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT }, { 0,0 }, 0.0f, WHITE);
+    }
+    else if (time == DAYCYCLE::NIGHT)
+    {
+        DrawTexturePro(m_ground, { 0, SCREEN_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT }, { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT }, { 0,0 }, 0.0f, WHITE);
+    }
+
+    DrawFPS(0, 0);
+    if (currentCell == CENTRE)
+    {
+        for (auto& building : buildings)
+        {
+            building->draw();
+        }
+
+        for (auto& npc : village)
+        {
+            npc->draw();
+        }
+
+        if (m_raid)
+        {
+            for (auto& npc : barracks)
+            {
+                npc->draw();
+            }
+        }
+    }
+    else
+    {
+        if (m_fieldNPC.use_count() > 0)
+        {
+            m_fieldNPC->draw();
+        }
+    }
+
+    player.draw();
+    for (Enemy& enemy : enemies)
+    {
+        enemy.draw();
+    }
+    for (auto& npc : party)
+    {
+        npc->draw();
+    }
+    for (auto& supply : supplies)
+    {
+        supply->draw();
+    }
+
+    if (currentCell == CENTRE)
+    {
+        DrawRectangleRec(m_swarmArea, GREEN);
+    }
+
+    std::string cellText;
+    switch (currentCell)
+    {
+    case CELLNORTH:
+        cellText = "NORTH";
+        break;
+    case CELLSOUTH:
+        cellText = "SOUTH";
+        break;
+    case CELLEAST:
+        cellText = "EAST";
+        break;
+    case CELLWEST:
+        cellText = "WEST";
+        break;
+    case CENTRE:
+        cellText = "CENTRE";
+        break;
+    default:
+        break;
+    }
+
+    DrawText(cellText.c_str(), 500, 10, 30, WHITE);
+
+    std::string supplyText;
+    supplyText = "Supplies: " + std::to_string(player.currentSupply());
+    DrawText(supplyText.c_str(), 10, 50, 20, WHITE);
+
+    m_dayText = "Day: " + std::to_string(m_dayCount);
+    DrawText(m_dayText.c_str(), 10, 70, 20, WHITE);
+
+    DrawText(m_timeText.c_str(), 10, 90, 20, WHITE);
+
+    DrawRectangleRec(m_healthOutline, BLACK);
+    DrawRectangleRec(m_healthBar, GREEN);
+}
+
+void Game::gameOverDraw()
+{
+    DrawTexturePro(m_ground, { 0, SCREEN_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT }, { m_scrolling1.x, m_scrolling1.y, SCREEN_WIDTH, SCREEN_HEIGHT }, { 0,0 }, 0.0f, WHITE);
+    DrawTexturePro(m_ground, { 0, SCREEN_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT }, { m_scrolling2.x, m_scrolling2.y, SCREEN_WIDTH, SCREEN_HEIGHT }, { 0,0 }, 0.0f, WHITE);
+
+    for (auto& button : buttons)
+    {
+        button->draw();
+    }
+
+    std::string titleText = "gameover";
+    DrawText(titleText.c_str(), 0, 0, 40, WHITE);
+}
+
+void Game::gameOverUpdate()
+{
+    screenScrolling();
+
+    for (auto& button : buttons)
+    {
+        if (button->checkCollision(GetMousePosition()) && IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
+        {
+            if (button->getTitle() == "Try Again")
+            {
+                m_gameState = GameState::GAMEPLAY;
+                reset();
+            }
+        }
+    }
+}
+
+void Game::endOfDayDraw()
+{
+    DrawTexturePro(m_ground, { 0, SCREEN_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT }, { m_scrolling1.x, m_scrolling1.y, SCREEN_WIDTH, SCREEN_HEIGHT }, { 0,0 }, 0.0f, WHITE);
+    DrawTexturePro(m_ground, { 0, SCREEN_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT }, { m_scrolling2.x, m_scrolling2.y, SCREEN_WIDTH, SCREEN_HEIGHT }, { 0,0 }, 0.0f, WHITE);
+
+    for (auto& button : buttons)
+    {
+        button->draw();
+    }
+
+    std::string dailyText;
+    dailyText = "Supplies Gained: " + std::to_string(m_dailySuppliesGained) + "\n";
+    dailyText += "Supplies Consumed: " + std::to_string(m_dailySuppliesConsumed) + "\n";
+    dailyText += "Villagers Added: " + std::to_string(m_dailyVillagers) + "\n";
+
+    DrawText(dailyText.c_str(), 370.0f, 200.0f, 40, WHITE);
+}
+
+void Game::endOfDayUpdate()
+{
+    for (auto& button : buttons)
+    {
+        if (button->checkCollision(GetMousePosition()) && IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
+        {
+            if (button->getTitle() == "Done")
+            {
+                m_gameState = GameState::GAMEPLAY;
+                m_dailySuppliesConsumed = 0;
+                m_dailySuppliesGained = 0;
+                m_dailyVillagers = 0;
+            }
+        }
+    }
+}
+
+void Game::screenScrolling()
+{
+    float speed = 1.5f;
+
+    m_scrolling1.x += speed;
+    m_scrolling2.x += speed;
+
+    if (m_scrolling1.x > SCREEN_WIDTH)
+    {
+        m_scrolling1.x = -SCREEN_WIDTH + 10;
+    }
+
+    if (m_scrolling2.x > SCREEN_WIDTH)
+    {
+        m_scrolling2.x = -SCREEN_WIDTH + 10;
     }
 }
 
@@ -364,6 +635,7 @@ void Game::collisionCheck()
             {
                 player.addSupply(supply->supplyValue());
                 supply->kill();
+                m_dailySuppliesGained += 10;
             }
         }
     }
@@ -652,6 +924,7 @@ void Game::supplySpawning(int t_amount)
 void Game::fieldNPCSpawning()
 {
     int randNum = rand() % 4;
+    randNum = 0;
 
     if (randNum == 0)
     {
@@ -771,6 +1044,7 @@ void Game::moveCell()
                     m_fieldNPC->stopFollowing();
                     party.push_back(m_fieldNPC);
                     m_fieldNPC.reset();
+                    m_dailyVillagers++;
                 }
                 else if (village.size() < MAX_NPCS)
                 {
@@ -779,6 +1053,7 @@ void Game::moveCell()
                     m_fieldNPC.reset();
                     m_numInVillage++;
                     village.back()->resetTarget();
+                    m_dailyVillagers++;
                 }
                 else
                 {
@@ -845,6 +1120,7 @@ void Game::dayCycle(bool t_forcedChange) // If t_forcedChange -> true, force it 
 
     if (t_forcedChange && time == DAYCYCLE::NIGHT && !m_raid)
     {
+        m_gameState = GameState::ENDOFDAY;
         time = DAYCYCLE::DAY;
         timedt = 0.0f;
         m_dayCount++;
@@ -857,6 +1133,8 @@ void Game::dailySupplies()
     suppliesUsed += 10 * party.size();
     suppliesUsed += 10 * village.size();
     suppliesUsed += 10 * barracks.size();
+
+    m_dailySuppliesConsumed = suppliesUsed;
 
     player.subtractSupply(suppliesUsed);
 

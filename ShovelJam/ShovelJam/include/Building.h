@@ -18,6 +18,7 @@ public:
     Building(std::shared_ptr<BuildingType> t_type, int t_sprite);
     virtual void init() override;
     virtual void update() override;
+    void reset();
 
     Rectangle getBody() { return m_body; }
     int returnValue() { return m_remainder; }

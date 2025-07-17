@@ -27,7 +27,7 @@ void GameObject::animate()
 	{
 		swapAnimation(0);
 	}
-	else if (m_velocity.x > 0.0f || m_velocity.y > 0.0f)
+	else if (m_velocity.x != 0.0f || m_velocity.y != 0.0f)
 	{
 		swapAnimation(1);
 	}

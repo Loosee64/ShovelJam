@@ -138,6 +138,7 @@
     <ClCompile Include="src\BuildingType.cpp" />
     <ClCompile Include="src\Bullet.cpp" />
     <ClCompile Include="src\Bunks.cpp" />
+    <ClCompile Include="src\Button.cpp" />
     <ClCompile Include="src\DefensiveBehaviour.cpp" />
     <ClCompile Include="src\Enemy.cpp" />
     <ClCompile Include="src\game.cpp" />
@@ -156,6 +157,7 @@
     <ClInclude Include="include\BuildingType.h" />
     <ClInclude Include="include\Bullet.h" />
     <ClInclude Include="include\Bunks.h" />
+    <ClInclude Include="include\Button.h" />
     <ClInclude Include="include\DefensiveBehaviour.h" />
     <ClInclude Include="include\Enemy.h" />
     <ClInclude Include="include\game.h" />
