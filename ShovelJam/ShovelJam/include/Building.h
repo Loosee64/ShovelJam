@@ -4,6 +4,7 @@
 #include "SupplyShed.h"
 #include "Barracks.h"
 #include "Bunks.h"
+#include "Saloon.h"
 #include "NPC.h"
 #include <string>
 
@@ -14,6 +15,7 @@ public:
     friend class SupplyShed;
     friend class Barracks;
     friend class Bunks;
+    friend class Saloon;
 
     Building(std::shared_ptr<BuildingType> t_type, int t_sprite);
     virtual void init() override;
@@ -21,11 +23,14 @@ public:
     void reset();
 
     Rectangle getBody() { return m_body; }
-    int returnValue() { return m_remainder; }
+    int getValue() { return m_currentValue; }
     int subractValue() { return m_subtract; }
     bool inProcess() { return m_inProcess; }
     bool completed() { return m_isComplete; }
     std::string getName() { return m_name; }
+    int bonusHappiness() { return m_bonusHappiness; }
+
+    void dailyCheck();
 
     void forceComplete() { m_isComplete = true; }
     void disableText() { m_textDisplay = false; }
@@ -65,5 +70,7 @@ private:
     int m_subtract;
     float m_width;
     float m_height;
+
+    int m_bonusHappiness;
 };
 

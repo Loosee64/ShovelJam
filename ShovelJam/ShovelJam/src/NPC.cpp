@@ -1,8 +1,8 @@
 #include "NPC.h"
 
-NPC::NPC(std::string t_name, Vector2 t_pos, std::shared_ptr<NPCBehaviour> t_behaviour, int t_animation) : m_name(t_name), m_following(false), m_activeBullet(-1), dt(0), m_shootingCooldown(1.0f), m_maxHealth(3.0f),
+NPC::NPC(std::string t_name, Vector2 t_pos, std::shared_ptr<NPCBehaviour> t_behaviour, int t_animation) : m_name(t_name), m_following(false), m_activeBullet(-1), dt(0), m_shootingCooldown(1.0f), m_maxHealth(3),
 												m_target({100000.0f, 100000.0f }), approachDistance(100.0f), behaviour(t_behaviour), areaTimer(-1.0f), areaTimerMax(0.5f),
-												m_building(false), iFrames(0)
+												m_building(false), iFrames(0), m_happiness(0), m_deserter(false)
 {
 	m_position = t_pos;
 	m_baseRow = t_animation;
@@ -23,7 +23,7 @@ void NPC::init()
 	m_frameRec = { 0, 0, 64, 64 };
 	m_frameRec.y = m_baseRow * 64;
 	m_destRec = { 0, 0, 128, 128 };
-	m_health = 5;
+	m_health = m_maxHealth;
 	
 	m_active = true; // ---------- TEMP
 	m_devVisuals = false;
@@ -169,6 +169,26 @@ void NPC::retreat()
 	}
 
 	temp.reset();
+}
+
+void NPC::updateHappiness(int t_happiness)
+{
+	m_happiness = t_happiness;
+
+	if (m_happiness >= 100)
+	{
+		m_maxHealth = 6;
+		m_deserter = false;
+	}
+	if (m_happiness < 100 && m_happiness >= 0)
+	{
+		m_maxHealth = 5;
+		m_deserter = false;
+	}
+	if (m_happiness < -10)
+	{
+		m_deserter = true;
+	}
 }
 
 void NPC::findTarget(Vector2* t_targets, int t_maxTargets)

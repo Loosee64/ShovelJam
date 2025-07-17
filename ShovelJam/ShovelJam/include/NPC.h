@@ -25,6 +25,8 @@ public:
 
     void damage();
     void retreat();
+    void updateHappiness(int t_happiness);
+    bool isDeserter() { return m_deserter; }
 
     bool isFollowing() { return m_following; }
     bool isBuilding() { return m_building; }
@@ -60,6 +62,9 @@ private:
 
     const int MAX_IFRAMES = 0.5f;
     int iFrames;
+
+    int m_happiness;
+    bool m_deserter;
 
     bool m_following;
     bool m_building;

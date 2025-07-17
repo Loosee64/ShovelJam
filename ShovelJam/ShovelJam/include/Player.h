@@ -26,6 +26,7 @@ public:
 
     bool isAlive();
     int getHealth() { return m_health; }
+    int getSupplies() { return supplyValue; }
 
     int getActiveBullet() { return activeBullet; }
     Vector2 getBulletPos() { return bullets[activeBullet].getPosition(); }

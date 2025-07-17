@@ -1,7 +1,8 @@
 #include "Building.h"
 
 Building::Building(std::shared_ptr<BuildingType> t_type, int t_sprite) : m_sprite(t_sprite), m_currentValue(0), m_remainder(0), displayText(""), m_height(0), m_width(0), m_isComplete(false),
-															m_type(t_type), m_subtract(0), m_inProcess(false), m_timeStarted(0), m_timeLeft(m_time), m_textDisplay(true)
+															m_type(t_type), m_subtract(0), m_inProcess(false), m_timeStarted(0), m_timeLeft(m_time), m_textDisplay(true),
+															m_bonusHappiness(0)
 {
 }
 
@@ -53,6 +54,14 @@ void Building::reset()
 	m_subtract = 0;
 }
 
+void Building::dailyCheck()
+{
+	if (m_isComplete)
+	{
+		m_type->dailyCheck(*this);
+	}
+}
+
 void Building::draw()
 {
 	if (completed())
@@ -67,7 +76,7 @@ void Building::draw()
 	displayText = m_name + "\n";
 	if (m_textDisplay)
 	{
-		if (m_name == "Supply Shed" || !m_isComplete)
+		if (m_name == "Supply Shed" || m_name == "Saloon" || !m_isComplete)
 		{
 			displayText += "Current Supplies: " + std::to_string(m_currentValue) + "\n";
 		}
@@ -148,6 +157,7 @@ void Building::completeCheck(int t_time)
 {
 	if (m_timeLeft <= 0)
 	{
+		m_currentValue -= m_value;
 		m_timeStarted = 0;
 		m_inProcess = false;
 		m_isComplete = true;

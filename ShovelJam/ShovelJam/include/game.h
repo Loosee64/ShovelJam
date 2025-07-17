@@ -12,6 +12,7 @@
 #include "Bunks.h"
 #include "Barracks.h"
 #include "SupplyShed.h"
+#include "Saloon.h"
 #include "SleepingBag.h"
 
 #include <vector>
@@ -79,6 +80,9 @@ private:
     int m_dailySuppliesGained;
     int m_dailySuppliesConsumed;
     int m_dailyVillagers;
+    int m_dailyHappiness;
+
+    int m_happiness;
 
     static const int MAX_ENEMIES = 10;
     static const int MAX_NPCS = 50;
@@ -113,7 +117,7 @@ private:
 
     float dt;
     float timedt;
-    const float DAY_LENGTH = 60.0f;
+    const float DAY_LENGTH = 10.0f;
 
     DAYCYCLE time;
     int m_dayCount;

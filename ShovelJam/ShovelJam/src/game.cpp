@@ -4,7 +4,7 @@
 
 Game::Game() : m_numTargets(0), currentCell(CENTRE), dt(0), wavedt(0), enemyKill(0), waveComplete(false), m_numInVillage(0), canInteract(true), time(DAYCYCLE::DAY),
                 timedt(0.0f), m_dayCount(1), m_dayText(""), m_raid(false), m_timeText(""), m_gameState(GameState::TITLE), m_dailySuppliesGained(0), m_dailySuppliesConsumed(0),
-                m_dailyVillagers(0)
+                m_dailyVillagers(0), m_happiness(0), m_dailyHappiness(0)
 {
 }
 
@@ -31,6 +31,7 @@ void Game::init()
     buildings.push_back(std::make_shared<Building>(std::make_shared<SupplyShed>(), 2));
     buildings.push_back(std::make_shared<Building>(std::make_shared<Bunks>(), 1));
     buildings.push_back(std::make_shared<Building>(std::make_shared<Barracks>(), 0));
+    buildings.push_back(std::make_shared<Building>(std::make_shared<Saloon>(), 1));
     buildings.push_back(std::make_shared<Building>(std::make_shared<SleepingBag>(), 0));
 
     player.init();
@@ -66,6 +67,11 @@ void Game::init()
             building->spawn({ 400.0f, 500.0f });
             building->forceComplete();
             building->disableText();
+            continue;
+        }
+        if (building->getName() == "Saloon")
+        {
+            building->spawn({ 800.0f, 600.0f });
             continue;
         }
 
@@ -319,6 +325,7 @@ void Game::gameplayUpdate()
             npc->findTarget(m_targetsArray, m_numTargets);
         }
         npc->update(player.getPosition());
+        npc->updateHappiness(m_happiness);
     }
 
     if (currentCell == CENTRE)
@@ -333,6 +340,11 @@ void Game::gameplayUpdate()
             if (!m_raid && !npc->isBuilding())
             {
                 npc->passive();
+                npc->updateHappiness(m_happiness);
+                if (npc->isDeserter())
+                {
+                    village.clear();
+                }
             }
             else
             {
@@ -350,6 +362,7 @@ void Game::gameplayUpdate()
             {
                 npc->findTarget(m_targetsArray, m_numTargets);
                 npc->update({ 0.0f, 0.0f });
+                npc->updateHappiness(m_happiness);
             }
         }
     }
@@ -459,6 +472,12 @@ void Game::gameplayDraw()
 
     DrawText(m_timeText.c_str(), 10, 90, 20, WHITE);
 
+    if (currentCell == CENTRE)
+    {
+        std::string happinessText = "Town Happiness: " + std::to_string(m_happiness);
+        DrawText(happinessText.c_str(), 200, 10, 20, WHITE);
+    }
+
     DrawRectangleRec(m_healthOutline, BLACK);
     DrawRectangleRec(m_healthBar, GREEN);
 }
@@ -508,6 +527,7 @@ void Game::endOfDayDraw()
     dailyText = "Supplies Gained: " + std::to_string(m_dailySuppliesGained) + "\n";
     dailyText += "Supplies Consumed: " + std::to_string(m_dailySuppliesConsumed) + "\n";
     dailyText += "Villagers Added: " + std::to_string(m_dailyVillagers) + "\n";
+    dailyText += "Happiness Gained: " + std::to_string(m_dailyHappiness) + "\n";
 
     DrawText(dailyText.c_str(), 370.0f, 200.0f, 40, WHITE);
 }
@@ -524,6 +544,7 @@ void Game::endOfDayUpdate()
                 m_dailySuppliesConsumed = 0;
                 m_dailySuppliesGained = 0;
                 m_dailyVillagers = 0;
+                m_dailyHappiness = 0;
             }
         }
     }
@@ -907,28 +928,38 @@ void Game::swarmSpawning()
 
 void Game::supplySpawning(int t_amount)
 {
-    Vector2 pos;
-
-    for (int i = 0; i < t_amount; i++)
+    if (currentCell == swarmSpot)
     {
-        if (!supplies.at(i)->isActive())
-        {
-            pos.x = (rand() % SCREEN_WIDTH - 50) + 50;
-            pos.y = (rand() % SCREEN_HEIGHT - 50) + 50;
+        Vector2 pos;
 
-            supplies.at(i)->spawn(pos);
+        for (int i = 0; i < t_amount; i++)
+        {
+            if (!supplies.at(i)->isActive())
+            {
+                pos.x = (rand() % SCREEN_WIDTH - 50) + 50;
+                pos.y = (rand() % SCREEN_HEIGHT - 50) + 50;
+
+                supplies.at(i)->spawn(pos);
+            }
         }
+    }
+    else
+    {
+        supplies.at(0)->kill();
     }
 }
 
 void Game::fieldNPCSpawning()
 {
-    int randNum = rand() % 4;
-    randNum = 0;
-
-    if (randNum == 0)
+    if (currentCell == swarmSpot)
     {
-        m_fieldNPC = std::make_shared<NPC>(NPC("Barry", { 500.0f, 200.0f }, std::make_shared<OffensiveBehaviour>(), 8));
+        int randNum = rand() % 4;
+        randNum = 0;
+
+        if (randNum == 0)
+        {
+            m_fieldNPC = std::make_shared<NPC>(NPC("Barry", { 500.0f, 200.0f }, std::make_shared<OffensiveBehaviour>(), 8));
+        }
     }
 }
 
@@ -1074,7 +1105,6 @@ void Game::dayCycle(bool t_forcedChange) // If t_forcedChange -> true, force it 
         if (timedt == 0)
         {
             checkBuildingStatus();
-            dailySupplies();
         }
 
         timedt += GetFrameTime();
@@ -1120,6 +1150,16 @@ void Game::dayCycle(bool t_forcedChange) // If t_forcedChange -> true, force it 
 
     if (t_forcedChange && time == DAYCYCLE::NIGHT && !m_raid)
     {
+        dailySupplies();
+        for (auto& building : buildings)
+        {
+            if (building->getName() == "Saloon")
+            {
+                building->dailyCheck();
+                m_happiness += building->bonusHappiness();
+                m_dailyHappiness += building->bonusHappiness();
+            }
+        }
         m_gameState = GameState::ENDOFDAY;
         time = DAYCYCLE::DAY;
         timedt = 0.0f;
@@ -1129,23 +1169,62 @@ void Game::dayCycle(bool t_forcedChange) // If t_forcedChange -> true, force it 
 
 void Game::dailySupplies()
 {
-    int suppliesUsed = 10;
-    suppliesUsed += 10 * party.size();
-    suppliesUsed += 10 * village.size();
-    suppliesUsed += 10 * barracks.size();
-
-    m_dailySuppliesConsumed = suppliesUsed;
-
-    player.subtractSupply(suppliesUsed);
-
-    /*if (!buildings.at(0)->completed())
+    if (m_dayCount > 0)
     {
-        player.subtractSupply(suppliesUsed);
+        int smallSupplies = 0;
+        int suppliesUsed = 10;
+        suppliesUsed += 10 * party.size();
+        suppliesUsed += 10 * village.size();
+        suppliesUsed += 10 * barracks.size();
+
+        if (!buildings.at(0)->completed())
+        {
+            if (player.getSupplies() >= suppliesUsed)
+            {
+                player.subtractSupply(suppliesUsed);
+                if (m_happiness < 50)
+                {
+                    m_happiness += 10;
+                    m_dailyHappiness += 10;
+                }
+            }
+            else if (player.getSupplies() == 0)
+            {
+                m_happiness -= 10;
+                m_dailyHappiness -= 10;
+            }
+            else
+            {
+                smallSupplies = suppliesUsed - player.getSupplies();
+                player.subtractSupply(smallSupplies);
+                suppliesUsed -= smallSupplies;
+                m_happiness -= suppliesUsed / 2;
+                m_dailyHappiness -= suppliesUsed / 2;
+            }
+        }
+        else
+        {
+            if (buildings.at(0)->getValue() > suppliesUsed)
+            {
+                buildings.at(0)->interact(-suppliesUsed);
+                if (m_happiness < 50)
+                {
+                    m_happiness += 10;
+                    m_dailyHappiness += 10;
+                }
+            }
+            else
+            {
+                smallSupplies = suppliesUsed - buildings.at(0)->getValue();
+                buildings.at(0)->interact(-smallSupplies);
+                suppliesUsed -= smallSupplies;
+                m_happiness -= suppliesUsed / 2;
+                m_dailyHappiness -= suppliesUsed / 2;
+            }
+        }
+
+        m_dailySuppliesConsumed = suppliesUsed;
     }
-    else
-    {
-
-    }*/
 }
 
 void Game::raidStarting(bool t_trigger)

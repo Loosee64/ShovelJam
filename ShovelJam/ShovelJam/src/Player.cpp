@@ -1,6 +1,6 @@
 #include "Player.h"
 
-Player::Player() : activeBullet(-1), iFrames(0), dt(0), m_shootingCooldown(0.15f), supplyValue(10)
+Player::Player() : activeBullet(-1), iFrames(0), dt(0), m_shootingCooldown(0.15f), supplyValue(0)
 {
 }
 
