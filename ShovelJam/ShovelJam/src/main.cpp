@@ -38,6 +38,7 @@ int main(void)
     }
 #endif
 
+    CloseAudioDevice();
     CloseWindow();
 
     return 0;

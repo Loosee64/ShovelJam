@@ -4,25 +4,39 @@
 
 Game::Game() : m_numTargets(0), currentCell(CENTRE), dt(0), wavedt(0), enemyKill(0), waveComplete(false), m_numInVillage(0), canInteract(true), time(DAYCYCLE::DAY),
                 timedt(0.0f), m_dayCount(1), m_dayText(""), m_raid(false), m_timeText(""), m_gameState(GameState::TITLE), m_dailySuppliesGained(0), m_dailySuppliesConsumed(0),
-                m_dailyVillagers(0), m_happiness(0), m_dailyHappiness(0)
+                m_dailyVillagers(0), m_happiness(0), m_dailyHappiness(0), m_lastName(-1), m_lastSprite(-1), m_interactText(false), m_lastSwarm(CENTRE)
 {
+}
+
+Game::~Game()
+{
+    UnloadMusicStream(m_music);
 }
 
 void Game::init()
 {
+    InitAudioDevice();
+
+    m_music = LoadMusicStream("ASSETS/music/roughnreadyfesliyanstudios.mp3");
+    PlayMusicStream(m_music);
+    SetMusicVolume(m_music, 0.2f);
+
     m_ground = LoadTexture("ASSETS/Spritesheets/ground_spritesheet.png");
+    m_waveArrow = LoadTexture("ASSETS/Spritesheets/wave.png");
+    m_backToVillage = LoadTexture("ASSETS/Spritesheets/backtovillage.png");
+    m_logo = LoadTexture("ASSETS/Spritesheets/logo.png");
     m_scrolling1 = { -SCREEN_WIDTH, 0 };
     m_scrolling2 = { 0, 0 };
 
     buttons.push_back(std::make_shared<Button>(Button("Play", 300.0f)));
-    buttons.push_back(std::make_shared<Button>(Button("Credits", 400.0f)));
+    buttons.push_back(std::make_shared<Button>(Button("Tutorial", 400.0f)));
+    buttons.push_back(std::make_shared<Button>(Button("Credits", 500.0f)));
 
     enemySpawning(MAX_ENEMIES);
 
     village.reserve(MAX_NPCS);
 
     party.reserve(MAX_PARTY);
-    village.push_back(std::make_shared<NPC>(NPC("Barry", { 500.0f, 400.0f }, std::make_shared<OffensiveBehaviour>(), 8)));
     
     supplies.reserve(MAX_SUPPLIES);
     supplies.push_back(std::make_shared<Supply>());
@@ -31,8 +45,8 @@ void Game::init()
     buildings.push_back(std::make_shared<Building>(std::make_shared<SupplyShed>(), 2));
     buildings.push_back(std::make_shared<Building>(std::make_shared<Bunks>(), 1));
     buildings.push_back(std::make_shared<Building>(std::make_shared<Barracks>(), 0));
-    buildings.push_back(std::make_shared<Building>(std::make_shared<Saloon>(), 1));
-    buildings.push_back(std::make_shared<Building>(std::make_shared<SleepingBag>(), 0));
+    buildings.push_back(std::make_shared<Building>(std::make_shared<Saloon>(), 3));
+    buildings.push_back(std::make_shared<Building>(std::make_shared<SleepingBag>(), 4));
 
     player.init();
 
@@ -79,10 +93,15 @@ void Game::init()
         offset += 300.0f;
     }
 
-    m_swarmArea.width = 40.0f;
-    m_swarmArea.height = 40.0f;
+    m_swarmArea.width = 256.0f;
+    m_swarmArea.height = 256.0f;
     m_swarmArea.x = 1000.0f;
     m_swarmArea.y = 1000.0f;
+
+    m_backArea = { 10000, 10000, 256, 256 };
+
+    m_waveSource = { 0, 0, 128, 128 };
+    m_backSource = { 0, 0, 128, 128 };
 
     m_healthBar = { 15, 20, 150, 20 };
     m_healthOutline = { 10, 15, 160, 30 };
@@ -102,13 +121,14 @@ void Game::reset()
     wavedt = 0;
     m_numInVillage = 0;
     enemyKill = 0;
+    m_happiness = 0;
 
     player.reset();
     village.clear();
     party.clear();
     barracks.clear();
 
-    buildings.push_back(std::make_shared<Building>(std::make_shared<SleepingBag>(), 0));
+    buildings.push_back(std::make_shared<Building>(std::make_shared<SleepingBag>(), 4));
     buildings.back()->init();
     m_effectiveMaxBuildings++;
 
@@ -149,6 +169,9 @@ void Game::draw()
     case GameState::ENDOFDAY:
         endOfDayDraw();
         break;
+    case GameState::TUTORIAL:
+        tutorialDraw();
+        break;
     default:
         break;
     }
@@ -156,6 +179,8 @@ void Game::draw()
 
 void Game::update()
 {
+    UpdateMusicStream(m_music);
+
     if (IsKeyReleased(KEY_F1)) { m_gameState = GameState::TITLE; }
     if (IsKeyReleased(KEY_F2)) { m_gameState = GameState::CREDITS; }
     if (IsKeyReleased(KEY_F3)) { m_gameState = GameState::GAMEPLAY; }
@@ -166,12 +191,14 @@ void Game::update()
     {
     case GameState::TITLE:
         buttons.at(0)->setValues("Play", 300.0f);
-        buttons.at(1)->setValues("Credits", 400.0f);
+        buttons.at(1)->setValues("Tutorial", 400.0f);
+        buttons.at(2)->setValues("Credits", 500.0f);
         titleUpdate();
         break;
     case GameState::CREDITS:
         buttons.at(0)->setValues("Done", 600.0f);
         buttons.at(1)->setValues("", 10000.0f);
+        buttons.at(2)->setValues("", 10000.0f);
         creditsUpdate();
         break;
     case GameState::GAMEPLAY:
@@ -180,12 +207,20 @@ void Game::update()
     case GameState::GAMEOVER:
         buttons.at(0)->setValues("Try Again", 400.0f);
         buttons.at(1)->setValues("", 10000.0f);
+        buttons.at(2)->setValues("", 10000.0f);
         gameOverUpdate();
         break;
     case GameState::ENDOFDAY:
         buttons.at(0)->setValues("Done", 600.0f);
         buttons.at(1)->setValues("", 10000.0f);
+        buttons.at(2)->setValues("", 10000.0f);
         endOfDayUpdate();
+        break;
+    case GameState::TUTORIAL:
+        tutorialUpdate();
+        buttons.at(0)->setValues("Done", 600.0f);
+        buttons.at(1)->setValues("", 10000.0f);
+        buttons.at(2)->setValues("", 10000.0f);
         break;
     default:
         break;
@@ -203,6 +238,10 @@ void Game::titleUpdate()
             {
                 m_gameState = GameState::GAMEPLAY;
             }
+            else if (button->getTitle() == "Tutorial")
+            {
+                m_gameState = GameState::TUTORIAL;
+            }
             else if (button->getTitle() == "Credits")
             {
                 m_gameState = GameState::CREDITS;
@@ -216,13 +255,12 @@ void Game::titleDraw()
     DrawTexturePro(m_ground, { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT }, { m_scrolling1.x, m_scrolling1.y, SCREEN_WIDTH, SCREEN_HEIGHT }, { 0,0 }, 0.0f, WHITE);
     DrawTexturePro(m_ground, { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT }, { m_scrolling2.x, m_scrolling2.y, SCREEN_WIDTH, SCREEN_HEIGHT }, { 0,0 }, 0.0f, WHITE);
 
+    DrawTexturePro(m_logo, { 0, 0, 256, 256 }, { 300, -50, 512, 512 }, { 0, 0 }, 0.0f, WHITE);
+
     for (auto& button : buttons)
     {
         button->draw();
     }
-
-    std::string titleText = "title";
-    DrawText(titleText.c_str(), 0, 0, 40, WHITE);
 }
 
 void Game::creditsDraw()
@@ -235,8 +273,18 @@ void Game::creditsDraw()
         button->draw();
     }
 
-    std::string titleText = "credits";
-    DrawText(titleText.c_str(), 0, 0, 40, WHITE);
+    std::string creditsText;
+    creditsText = "Programming: Lucy Arthur\n";
+    creditsText += "Art Assets: Lucy Arthur\n";
+    creditsText += "Game Design: Lucy Arthur\n";
+    creditsText += "Music: Rough N' Ready, www.FesliyanStudios.com\n\n";
+    creditsText += "Made With:\n";
+    creditsText += "C++\n";
+    creditsText += "Raylib Graphics Library\n";
+    creditsText += "Visual Studio 2022\n";
+    creditsText += "Aseprite\n";
+
+    DrawText(creditsText.c_str(), 100.0f, 20.0f, 40, WHITE);
 }
 
 void Game::creditsUpdate()
@@ -294,19 +342,19 @@ void Game::gameplayUpdate()
 
     disableSleepingBag();
 
-    if (IsKeyReleased(KEY_R)) { enemySpawning(MAX_ENEMIES); } // DEV KEY
-    if (IsKeyReleased(KEY_T)) // DEV KEY
-    {
-        for (auto& enemy : enemies)
-        {
-            enemy.kill();
-        }
-    }
-    if (IsKeyReleased(KEY_UP)) { currentCell = CELLNORTH; } // DEV KEY
-    if (IsKeyReleased(KEY_DOWN)) { currentCell = CELLSOUTH; } // DEV KEY
-    if (IsKeyReleased(KEY_RIGHT)) { currentCell = CELLEAST; } // DEV KEY
-    if (IsKeyReleased(KEY_LEFT)) { currentCell = CELLWEST; } // DEV KEY
-    if (IsKeyReleased(KEY_SPACE)) { currentCell = CENTRE; } // DEV KEY
+    //if (IsKeyReleased(KEY_R)) { enemySpawning(MAX_ENEMIES); } // DEV KEY
+    //if (IsKeyReleased(KEY_T)) // DEV KEY
+    //{
+    //    for (auto& enemy : enemies)
+    //    {
+    //        enemy.kill();
+    //    }
+    //}
+    //if (IsKeyReleased(KEY_UP)) { currentCell = CELLNORTH; } // DEV KEY
+    //if (IsKeyReleased(KEY_DOWN)) { currentCell = CELLSOUTH; } // DEV KEY
+    //if (IsKeyReleased(KEY_RIGHT)) { currentCell = CELLEAST; } // DEV KEY
+    //if (IsKeyReleased(KEY_LEFT)) { currentCell = CELLWEST; } // DEV KEY
+    //if (IsKeyReleased(KEY_SPACE)) { currentCell = CENTRE; } // DEV KEY
 
     if (currentCell == CENTRE && !m_raid)
     {
@@ -323,6 +371,10 @@ void Game::gameplayUpdate()
         if (!npc->isBuilding())
         {
             npc->findTarget(m_targetsArray, m_numTargets);
+        }
+        if (currentCell == CENTRE)
+        {
+            npc->fullHeal();
         }
         npc->update(player.getPosition());
         npc->updateHappiness(m_happiness);
@@ -434,11 +486,6 @@ void Game::gameplayDraw()
         supply->draw();
     }
 
-    if (currentCell == CENTRE)
-    {
-        DrawRectangleRec(m_swarmArea, GREEN);
-    }
-
     std::string cellText;
     switch (currentCell)
     {
@@ -480,6 +527,64 @@ void Game::gameplayDraw()
 
     DrawRectangleRec(m_healthOutline, BLACK);
     DrawRectangleRec(m_healthBar, GREEN);
+
+    if (m_interactText)
+    {
+        DrawText("E to Interact\nR to Assign Villager", player.getPosition().x - 50.0f, player.getPosition().y + 50.0f, 20, WHITE);
+    }
+
+    if (currentCell == CENTRE)
+    {
+        switch (swarmSpot)
+        {
+        case CELLNORTH:
+            m_waveSource.x = 384;
+            break;
+        case CELLSOUTH:
+            m_waveSource.x = 256;
+            break;
+        case CELLEAST:
+            m_waveSource.x = 128;
+            break;
+        case CELLWEST:
+            m_waveSource.x = 0;
+            break;
+        default:
+            break;
+        }
+
+        DrawTexturePro(m_waveArrow, m_waveSource, m_swarmArea, { 0, 0 }, 0.0f, WHITE);
+    }
+    else
+    {
+        switch (currentCell)
+        {
+        case CELLNORTH:
+            m_backSource.x = 256;
+            m_backArea.x = 400.0f;
+            m_backArea.y = SCREEN_HEIGHT - 256.0f;
+            break;
+        case CELLSOUTH:
+            m_backSource.x = 384;
+            m_backArea.x = 400.0f;
+            m_backArea.y = 50.0f;
+            break;
+        case CELLEAST:
+            m_backSource.x = 0;
+            m_backArea.x = 50.0f;
+            m_backArea.y = 300.0f;
+            break;
+        case CELLWEST:
+            m_backSource.x = 128;
+            m_backArea.x = SCREEN_WIDTH - 256.0f;
+            m_backArea.y = 300.0f;
+            break;
+        default:
+            break;
+        }
+
+        DrawTexturePro(m_backToVillage, m_backSource, m_backArea, { 0, 0 }, 0.0f, WHITE);
+    }
 }
 
 void Game::gameOverDraw()
@@ -491,9 +596,6 @@ void Game::gameOverDraw()
     {
         button->draw();
     }
-
-    std::string titleText = "gameover";
-    DrawText(titleText.c_str(), 0, 0, 40, WHITE);
 }
 
 void Game::gameOverUpdate()
@@ -545,6 +647,45 @@ void Game::endOfDayUpdate()
                 m_dailySuppliesGained = 0;
                 m_dailyVillagers = 0;
                 m_dailyHappiness = 0;
+            }
+        }
+    }
+}
+
+void Game::tutorialDraw()
+{
+    DrawTexturePro(m_ground, { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT }, { m_scrolling1.x, m_scrolling1.y, SCREEN_WIDTH, SCREEN_HEIGHT }, { 0,0 }, 0.0f, WHITE);
+    DrawTexturePro(m_ground, { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT }, { m_scrolling2.x, m_scrolling2.y, SCREEN_WIDTH, SCREEN_HEIGHT }, { 0,0 }, 0.0f, WHITE);
+
+    for (auto& button : buttons)
+    {
+        button->draw();
+    }
+
+    std::string tutorialText;
+    tutorialText = "Jimmy has stumbled across an old abandoned \nvillage and decides to fix it up!\n\n";
+    tutorialText += "Face the waves of monsters around the outskirts \nof the town to gain supplies and find new villagers!\n\n";
+    tutorialText += "Use supplies to build up new buildings around town!\n\n";
+    tutorialText += "Sleeping Bag: Used to sleep through \nthe night until the Bunks are built\n\n";
+    tutorialText += "Bunks: Used to sleep through the \nnight and house people in your village!\n\n";
+    tutorialText += "Supply Shed: Used to store supplies \nto keep your town fed and your villagers happy!\n\n";
+    tutorialText += "Barracks: Used to house villagers \nwho will protect your town during a raid\n\n";
+    tutorialText += "Saloon: When stocked with supplies, increases town happiness!\n\n";
+
+    DrawText(tutorialText.c_str(), 100.0f, 20.0f, 25, WHITE);
+}
+
+void Game::tutorialUpdate()
+{
+    screenScrolling();
+
+    for (auto& button : buttons)
+    {
+        if (button->checkCollision(GetMousePosition()) && IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
+        {
+            if (button->getTitle() == "Done")
+            {
+                m_gameState = GameState::TITLE;
             }
         }
     }
@@ -661,31 +802,37 @@ void Game::collisionCheck()
         }
     }
 
-    if (currentCell == CENTRE && IsKeyReleased(KEY_E))
+    m_interactText = false;
+
+    if (currentCell == CENTRE)
     {
         for (auto& building : buildings)
         {
-            canInteract = false;
             if (CheckCollisionCircleRec(player.getPosition(), player.getRadius(), building->getBody()))
             {
-                if (!building->completed() && !building->inProcess())
+                m_interactText = true;
+                if (IsKeyReleased(KEY_E))
                 {
-                    building->build(player.currentSupply());
-                    player.subtractSupply(building->subractValue());
+                    canInteract = false;
+                    if (!building->completed() && !building->inProcess())
+                    {
+                        building->build(player.currentSupply());
+                        player.subtractSupply(building->subractValue());
+                    }
+                    else if (building->inProcess())
+                    {
+                        buildingProgress(*building);
+                    }
+                    else
+                    {
+                        building->interact(player.currentSupply());
+                    }
+                    if (!building->inProcess())
+                    {
+                        player.subtractSupply(building->subractValue());
+                    }
+                    buildingInteract(*building);
                 }
-                else if (building->inProcess())
-                {
-                    buildingProgress(*building);
-                }
-                else
-                {
-                    building->interact(player.currentSupply());
-                }
-                if (!building->inProcess())
-                {
-                    player.subtractSupply(building->subractValue());
-                }
-                buildingInteract(*building);
             }
         }
     }
@@ -903,11 +1050,17 @@ void Game::swarmSpawning()
 {
     swarmSpot = (Cell)(rand() % 4);
 
+    while (swarmSpot == m_lastSwarm)
+    {
+        swarmSpot = (Cell)(rand() % 4);
+    }
+    m_lastSwarm = swarmSpot;
+
     switch (swarmSpot)
     {
     case CELLSOUTH:
         m_swarmArea.x = 400.0f;
-        m_swarmArea.y = SCREEN_HEIGHT - 50.0f;
+        m_swarmArea.y = SCREEN_HEIGHT - 256.0f;
         break;
     case CELLNORTH:
         m_swarmArea.x = 400.0f;
@@ -918,7 +1071,7 @@ void Game::swarmSpawning()
         m_swarmArea.y = 300.0f;
         break;
     case CELLEAST:
-        m_swarmArea.x = SCREEN_WIDTH - 50.0f;
+        m_swarmArea.x = SCREEN_WIDTH - 256.0f;
         m_swarmArea.y = 300.0f;
         break;
     default:
@@ -939,6 +1092,7 @@ void Game::supplySpawning(int t_amount)
                 pos.x = (rand() % SCREEN_WIDTH - 50) + 50;
                 pos.y = (rand() % SCREEN_HEIGHT - 50) + 50;
 
+                supplies.at(i)->increaseValue(m_dayCount);
                 supplies.at(i)->spawn(pos);
             }
         }
@@ -953,13 +1107,82 @@ void Game::fieldNPCSpawning()
 {
     if (currentCell == swarmSpot)
     {
-        int randNum = rand() % 4;
-        randNum = 0;
+        int randNum = rand() % 3;
 
         if (randNum == 0)
         {
-            m_fieldNPC = std::make_shared<NPC>(NPC("Barry", { 500.0f, 200.0f }, std::make_shared<OffensiveBehaviour>(), 8));
+            m_fieldNPC = std::make_shared<NPC>(generateNPC());
         }
+    }
+}
+
+NPC Game::generateNPC()
+{
+    int name = rand() % 10;
+
+    while (name == m_lastName)
+    {
+        name = rand() % 10;
+    }
+    m_lastName = name;
+
+    int sprite = (rand() % 4) + 1;
+
+    while (sprite == m_lastSprite)
+    {
+        sprite = (rand() % 4) + 1;
+    }
+    m_lastSprite = sprite;
+
+    int behaviour = rand() % 3;
+
+    Vector2 pos = { (rand() % 400) + 100.0f, (rand() % 200) + 100.0f };
+
+    std::string nameString;
+
+    switch (name)
+    {
+    case 0:
+        nameString = "Barry";
+        break;
+    case 1:
+        nameString = "Hot Pants";
+        break;
+    case 2:
+        nameString = "Martha";
+        break;
+    case 3:
+        nameString = "Pauline";
+        break;
+    case 4:
+        nameString = "Marty";
+        break;
+    case 5:
+        nameString = "Clint";
+        break;
+    case 6:
+        nameString = "Arthur";
+        break;
+    case 7:
+        nameString = "Barry2";
+        break;
+    case 8:
+        nameString = "Texas Red";
+        break;
+    case 9:
+        nameString = "Diego";
+        break;
+    default:
+        break;
+    }
+
+    if (behaviour == 0)
+    {
+        return NPC(nameString, pos, std::make_shared<DefensiveBehaviour>(), 2 * sprite);
+    }
+    else
+    {
+        return NPC(nameString, pos, std::make_shared<OffensiveBehaviour>(), 2 * sprite);
     }
 }
 
@@ -1151,6 +1374,7 @@ void Game::dayCycle(bool t_forcedChange) // If t_forcedChange -> true, force it 
     if (t_forcedChange && time == DAYCYCLE::NIGHT && !m_raid)
     {
         dailySupplies();
+        player.fullHeal();
         for (auto& building : buildings)
         {
             if (building->getName() == "Saloon")

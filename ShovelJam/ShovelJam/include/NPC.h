@@ -24,6 +24,7 @@ public:
     void spawn(Vector2 t_start);
 
     void damage();
+    void fullHeal() { m_health = m_maxHealth; }
     void retreat();
     void updateHappiness(int t_happiness);
     bool isDeserter() { return m_deserter; }
@@ -80,5 +81,6 @@ private:
     float approachDistance;
 
     std::shared_ptr<NPCBehaviour> behaviour;
+    std::shared_ptr<NPCBehaviour> behaviourCopy;
 };
 

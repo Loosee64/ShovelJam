@@ -12,6 +12,7 @@ public:
     void spawn(Vector2 t_pos);
     void kill();
 
+    void increaseValue(int t_days);
     int supplyValue() { return m_value; }
 
 private:

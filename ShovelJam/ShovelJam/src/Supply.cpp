@@ -10,7 +10,7 @@ void Supply::init()
 	m_colour = BROWN;
 	m_radius = 25.0f;
 	m_active = false;
-	m_devVisuals = true;
+	m_devVisuals = false;
 
 	m_texture = LoadTexture("ASSETS/Spritesheets/supply.png");
 	m_frameRec = { 0, 0, 64, 64 };
@@ -38,4 +38,18 @@ void Supply::spawn(Vector2 t_pos)
 void Supply::kill()
 {
 	GameObject::kill();
+}
+
+void Supply::increaseValue(int t_days)
+{
+	int tempValue = 0;
+
+	if (t_days > 3)
+	{
+		tempValue = t_days / 2.0f;
+		if (tempValue > 1)
+		{
+			m_value *= tempValue;
+		}
+	}
 }

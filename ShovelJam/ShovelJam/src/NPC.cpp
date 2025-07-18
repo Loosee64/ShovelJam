@@ -1,7 +1,7 @@
 #include "NPC.h"
 
 NPC::NPC(std::string t_name, Vector2 t_pos, std::shared_ptr<NPCBehaviour> t_behaviour, int t_animation) : m_name(t_name), m_following(false), m_activeBullet(-1), dt(0), m_shootingCooldown(1.0f), m_maxHealth(3),
-												m_target({100000.0f, 100000.0f }), approachDistance(100.0f), behaviour(t_behaviour), areaTimer(-1.0f), areaTimerMax(0.5f),
+												m_target({100000.0f, 100000.0f }), approachDistance(100.0f), behaviour(t_behaviour), behaviourCopy(t_behaviour), areaTimer(-1.0f), areaTimerMax(0.5f),
 												m_building(false), iFrames(0), m_happiness(0), m_deserter(false)
 {
 	m_position = t_pos;
@@ -165,6 +165,11 @@ void NPC::retreat()
 				behaviour.reset();
 				behaviour = temp;
 			}
+		}
+
+		if (m_health > 1)
+		{
+			behaviour = behaviourCopy;
 		}
 	}
 

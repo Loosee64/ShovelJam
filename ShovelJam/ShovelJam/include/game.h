@@ -19,12 +19,13 @@
 #include <string>
 
 enum class DAYCYCLE {DAY, NIGHT};
-enum class GameState {TITLE, CREDITS, GAMEPLAY, GAMEOVER, ENDOFDAY};
+enum class GameState {TITLE, CREDITS, GAMEPLAY, GAMEOVER, ENDOFDAY, TUTORIAL};
 
 class Game
 {
 public:
     Game();
+    ~Game();
     void init();
     void reset();
     void draw();
@@ -45,6 +46,9 @@ public:
     void endOfDayDraw();
     void endOfDayUpdate();
 
+    void tutorialDraw();
+    void tutorialUpdate();
+
     void screenScrolling();
 
     void collisionCheck();
@@ -59,6 +63,7 @@ public:
     void swarmSpawning();
     void supplySpawning(int t_amount);
     void fieldNPCSpawning();
+    NPC generateNPC();
 
     void findNPCTarget();
     void moveCell();
@@ -88,9 +93,12 @@ private:
     static const int MAX_NPCS = 50;
     static const int MAX_PARTY = 3;
     static const int MAX_SUPPLIES = 1;
-    static const int MAX_BUILDINGS = 4;
+    static const int MAX_BUILDINGS = 5;
 
     int m_effectiveMaxBuildings = MAX_BUILDINGS;
+
+    int m_lastName;
+    int m_lastSprite;
 
     Player player;
     Enemy enemies[MAX_ENEMIES];
@@ -117,7 +125,7 @@ private:
 
     float dt;
     float timedt;
-    const float DAY_LENGTH = 10.0f;
+    const float DAY_LENGTH = 60.0f;
 
     DAYCYCLE time;
     int m_dayCount;
@@ -126,11 +134,24 @@ private:
     const int RAID_DAY = 7;
 
     Rectangle m_swarmArea;
+    Rectangle m_waveSource;
     Cell swarmSpot;
+    Cell m_lastSwarm;
+
+    Rectangle m_backSource;
+    Rectangle m_backArea;
+    Texture2D m_backToVillage;
 
     bool m_raid;
 
     Texture2D m_ground;
+    Texture2D m_waveArrow;
+
+    bool m_interactText;
+
+    Texture2D m_logo;
+
+    Music m_music;
 };
 
 #endif // GAME_H

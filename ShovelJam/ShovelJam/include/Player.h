@@ -17,6 +17,8 @@ public:
     void draw();
 
     void kill();
+    void fullHeal() { m_health = MAX_HEALTH; }
+
 
     void input();
     void shoot();
